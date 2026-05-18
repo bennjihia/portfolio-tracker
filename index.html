@@ -1,0 +1,2270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Afrivest Portfolio Tracker · NSE Kenya</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=DM+Mono:wght@400;500&family=Roboto:wght@400;500;700;900&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════════════════ */
+:root{
+  --navy:#141c2e; --red:#c8222e; --gold:#c47b0a; --gold2:#f5a623;
+  --green:#0a6e5e; --green2:#00c896;
+  --cream:#f6f1e9; --bg:#eee8dc; --white:#ffffff;
+  --card:#ffffff; --s2:#faf7f2; --s3:#f2ede4;
+  --b1:rgba(20,28,46,.1); --b2:rgba(20,28,46,.07); --b3:rgba(20,28,46,.04);
+  --text:#1a1610; --muted:#7a6e5a; --dim:#b8b0a0;
+  --fd:'Playfair Display',serif;
+  --fr:'Roboto',sans-serif;
+  --fu:'Syne',sans-serif;
+  --fm:'DM Mono',monospace;
+  --r:12px; --r2:8px; --r3:6px;
+  --sh:0 2px 20px rgba(20,28,46,.08);
+  --sh2:0 4px 32px rgba(20,28,46,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-size:16px}
+*{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+body{font-family:var(--fu);background:var(--bg);color:var(--text);overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(200,34,46,.04),transparent);pointer-events:none;z-index:0}
+
+/* ═══════════════════════════════════════════════════════
+   TICKER STRIP
+══════════════════════════════════════════════════════ */
+.ts{background:var(--navy);height:30px;overflow:hidden;display:flex;align-items:center;position:sticky;top:0;z-index:100}
+.tt{display:flex;animation:ticker 35s linear infinite;white-space:nowrap}
+.tt:hover{animation-play-state:paused}
+.ti{display:inline-flex;align-items:center;gap:8px;padding:0 20px;border-right:1px solid rgba(255,255,255,.08);font-family:var(--fm);font-size:11px}
+.tn{color:rgba(255,255,255,.45);letter-spacing:.06em;font-size:10px}
+.tv{color:#fff;font-weight:500}
+.tu{color:#4dffc0;font-size:10px;font-weight:500}
+.td2{color:#ff7070;font-size:10px;font-weight:500}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ═══════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════ */
+.hdr{background:var(--navy);padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;height:64px;position:sticky;top:30px;z-index:99;box-shadow:0 2px 20px rgba(0,0,0,.3)}
+.brand{display:flex;align-items:center;gap:0}
+.bname{font-family:var(--fd);font-size:22px;font-weight:900;color:#fff;letter-spacing:.01em;line-height:1}
+.bname .red{color:var(--red)}
+.bsub{font-size:10px;color:rgba(255,255,255,.4);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
+.hdr-mid{display:flex;align-items:center;gap:24px}
+.idx-pill{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:7px 16px}
+.idx-item{text-align:center}
+.idx-l{font-size:9px;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--fu)}
+.idx-v{font-family:var(--fm);font-size:15px;font-weight:500;color:#fff;line-height:1}
+.idx-c{font-family:var(--fm);font-size:10px;margin-top:2px}
+.idx-sep{width:1px;height:32px;background:rgba(255,255,255,.1)}
+.hdr-right{display:flex;align-items:center;gap:10px}
+.rfsh-wrap{display:flex;flex-direction:column;align-items:flex-end}
+.rfsh-lbl{font-size:9px;color:rgba(255,255,255,.35);margin-bottom:3px;font-family:var(--fm)}
+.rfsh-status{display:flex;align-items:center;gap:5px}
+.rfsh-dot{width:6px;height:6px;border-radius:50%;background:var(--green2);animation:pulse 2s ease-in-out infinite}
+.rfsh-dot.stale{background:var(--gold2);animation:none}
+.rfsh-dot.err{background:#ff7070;animation:none}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+.rfsh-txt{font-size:10px;color:rgba(255,255,255,.5);font-family:var(--fm)}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:var(--r3);font-family:var(--fu);font-size:12px;font-weight:700;cursor:pointer;border:none;transition:all .18s;letter-spacing:.03em;white-space:nowrap}
+.btn-red{background:var(--red);color:#fff}.btn-red:hover{background:#b81a26;box-shadow:0 0 14px rgba(200,34,46,.3)}
+.btn-outline{background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.15)}.btn-outline:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-light{background:var(--s2);color:var(--text);border:1px solid var(--b1)}.btn-light:hover{background:var(--s3)}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-xs{padding:4px 9px;font-size:10px}
+.spin{display:inline-block;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ═══════════════════════════════════════════════════════
+   PAGE BODY
+══════════════════════════════════════════════════════ */
+.page{padding:24px 32px;position:relative;z-index:1;min-height:calc(100vh - 94px)}
+
+/* ═══════════════════════════════════════════════════════
+   METRIC CARDS
+══════════════════════════════════════════════════════ */
+.metrics-unused{display:none}
+.mc{background:var(--card);border:1px solid var(--b1);border-radius:var(--r);padding:20px 22px;position:relative;overflow:hidden;transition:transform .15s,box-shadow .15s;cursor:default}
+.mc:hover{transform:translateY(-2px);box-shadow:var(--sh2)}
+.mc-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.mc-icon{position:absolute;right:18px;top:16px;font-size:26px;opacity:.12}
+.mc-lbl{font-family:var(--fu);font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px}
+.mc-val{font-family:var(--fd);font-size:28px;font-weight:900;color:var(--text);line-height:1;transition:color .3s}
+.mc-sub{font-family:var(--fm);font-size:12px;color:var(--muted);margin-top:6px}
+.mc-sub.pos{color:var(--green)}.mc-sub.neg{color:var(--red)}
+.pos{color:var(--green)}.neg{color:var(--red)}.gold{color:var(--gold)}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN LAYOUT
+══════════════════════════════════════════════════════ */
+.layout{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+
+/* ═══════════════════════════════════════════════════════
+   TABS
+══════════════════════════════════════════════════════ */
+.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:2px solid var(--b1)}
+.tab{font-family:var(--fu);font-size:13px;font-weight:700;color:var(--muted);padding:10px 18px;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;margin-bottom:-2px;letter-spacing:.03em;transition:color .2s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.tab.active{color:var(--red);border-bottom-color:var(--red)}
+.tab:hover:not(.active){color:var(--text)}
+.tab-badge{background:var(--red);color:#fff;border-radius:20px;font-size:9px;padding:1px 6px;font-weight:700;min-width:18px;text-align:center}
+.panel{display:none;animation:fadeUp .22s ease}.panel.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════════════════ */
+.card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px}
+.card-last{margin-bottom:0}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--b1);flex-wrap:wrap;gap:10px}
+.ch-left{display:flex;flex-direction:column;gap:2px}
+.ct{font-family:var(--fr);font-size:16px;font-weight:700;color:var(--navy);letter-spacing:.01em}
+.csub{font-size:11px;color:var(--muted)}
+.ch-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+/* ═══════════════════════════════════════════════════════
+   TABLE CONTROLS
+══════════════════════════════════════════════════════ */
+.ctrl{display:flex;align-items:center;gap:8px;padding:12px 18px;border-bottom:1px solid var(--b1);background:var(--s2);flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:280px}
+.search-ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+.search-inp{background:var(--card);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 10px 8px 32px;font-size:13px;color:var(--text);font-family:var(--fu);width:100%;transition:all .2s}
+.search-inp:focus{outline:none;border-color:rgba(200,34,46,.4);box-shadow:0 0 0 3px rgba(200,34,46,.07)}
+.search-inp::placeholder{color:var(--dim)}
+.sf-wrap{display:flex;gap:4px;flex-wrap:wrap}
+.sf{font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;cursor:pointer;border:1px solid var(--b1);background:none;color:var(--muted);font-family:var(--fu);letter-spacing:.04em;transition:all .14s}
+.sf.on,.sf:hover{border-color:var(--red);color:var(--red);background:rgba(200,34,46,.06)}
+
+/* ═══════════════════════════════════════════════════════
+   TABLE
+══════════════════════════════════════════════════════ */
+.tw{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--b1) transparent}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:10px 14px;border-bottom:2px solid var(--b1);background:var(--s2);white-space:nowrap;cursor:pointer;user-select:none;transition:color .18s}
+th:hover{color:var(--navy)}
+th.sorted{color:var(--red)}
+th.r{text-align:right}
+.sa{margin-left:3px;font-size:9px;opacity:.4}
+th.sorted .sa{opacity:1;color:var(--red)}
+td{padding:12px 14px;border-bottom:1px solid var(--b2);vertical-align:middle;color:var(--text)}
+td.r{text-align:right;font-family:var(--fm);font-size:12px}
+tr:hover td{background:rgba(20,28,46,.02)}
+tr:last-child td{border-bottom:none}
+.er td{text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic}
+.sgr td{background:var(--s2);padding:7px 14px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--b1)}
+.tr-tot td{background:var(--s2);font-family:var(--fm);font-size:12px;font-weight:600;border-top:2px solid rgba(200,34,46,.15)}
+
+/* Stock cell */
+.stk{display:flex;align-items:center;gap:10px}
+.sico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:9px;font-weight:700;flex-shrink:0;letter-spacing:.02em}
+.sticker{font-family:var(--fm);font-size:12px;font-weight:700;color:var(--navy)}
+.sname{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* P&L badges */
+.plb{display:inline-flex;align-items:center;gap:2px;padding:3px 8px;border-radius:5px;font-family:var(--fm);font-size:12px;font-weight:500}
+.plp{background:rgba(10,110,94,.08);color:var(--green);border:1px solid rgba(10,110,94,.18)}
+.pln{background:rgba(200,34,46,.07);color:var(--red);border:1px solid rgba(200,34,46,.15)}
+.plz{background:var(--s3);color:var(--muted)}
+
+/* Sector pills */
+.pill{display:inline-block;font-size:9px;padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:.05em;white-space:nowrap}
+.s-Banking{background:#e6f1fb;color:#0c447c}
+.s-Telecom{background:#e0f7ee;color:#085041}
+.s-Consumer{background:#fdf0dc;color:#7a4000}
+.s-Insurance{background:#fceaea;color:#800020}
+.s-Aviation{background:#f0eef8;color:#3d3080}
+.s-Energy{background:#eaf5dc;color:#2a5000}
+.s-Industrial{background:#fdf4e0;color:#5a3800}
+.s-Investment{background:#f4e8ff;color:#5a0090}
+.s-Media{background:#fff0e8;color:#803020}
+.s-Agriculture{background:#e8f8e8;color:#1a5020}
+.s-Hospitality{background:#fff8e0;color:#7a5000}
+.s-RealEstate{background:#e0f4f8;color:#006070}
+.s-Manufacturing{background:#f8f0e0;color:#604020}
+
+/* Delete button */
+.db{background:none;border:none;cursor:pointer;color:var(--dim);padding:3px 6px;border-radius:4px;font-size:14px;transition:all .14s}
+.db:hover{color:var(--red);background:rgba(200,34,46,.07)}
+
+/* Progress bar */
+.progbar{height:5px;background:var(--s3);border-radius:3px;overflow:hidden;margin-top:4px}
+.progfill{height:100%;border-radius:3px;transition:width .5s ease}
+
+/* ═══════════════════════════════════════════════════════
+   ADD FORM (slide panel)
+══════════════════════════════════════════════════════ */
+.af{background:var(--s2);border-bottom:1px solid var(--b1);padding:16px 18px;display:none;animation:sd .2s ease}
+.af.open{display:block}
+@keyframes sd{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.fg{display:grid;gap:12px;margin-bottom:12px}
+.fg2{grid-template-columns:1fr 1fr}
+.fg3{grid-template-columns:1.3fr 1fr 1fr}
+.fg4{grid-template-columns:1fr 1fr 1fr 1fr}
+.fg5{grid-template-columns:1.5fr 1fr 1fr 1fr 1fr}
+label{font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.08em}
+input[type=text],input[type=number],input[type=date],input[type=url],textarea,select{width:100%;background:var(--card);border:1px solid var(--b1);border-radius:var(--r3);padding:9px 12px;font-size:13px;color:var(--text);font-family:var(--fu);transition:all .2s;resize:none}
+input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(200,34,46,.4);box-shadow:0 0 0 3px rgba(200,34,46,.07)}
+select option{background:var(--card)}
+.fa{display:flex;gap:8px;justify-content:flex-end}
+
+/* FI type tabs */
+.fitabs{display:flex;gap:5px;padding:12px 18px 0;flex-wrap:wrap}
+.fit{font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;cursor:pointer;border:1px solid var(--b1);background:none;color:var(--muted);font-family:var(--fu);letter-spacing:.03em;transition:all .14s}
+.fit.active{background:rgba(200,34,46,.08);color:var(--red);border-color:rgba(200,34,46,.25)}
+
+/* ═══════════════════════════════════════════════════════
+   MMF CARDS
+══════════════════════════════════════════════════════ */
+.mfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;padding:16px 18px}
+.mfc{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:16px;transition:all .18s;position:relative}
+.mfc:hover{box-shadow:var(--sh);border-color:rgba(10,110,94,.25);transform:translateY(-1px)}
+.mfc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.mfc-name{font-family:var(--fd);font-size:14px;font-weight:800;color:var(--navy);line-height:1.3}
+.mfc-rate{font-family:var(--fm);font-size:22px;font-weight:500;color:var(--green);margin:8px 0 3px}
+.mfc-sub{font-size:10px;color:var(--muted)}
+.mfc-bottom{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)}
+.mfc-bl{font-size:10px;color:var(--muted)}
+.mfc-bv{font-family:var(--fm);font-size:13px;color:var(--navy);font-weight:500}
+
+/* ═══════════════════════════════════════════════════════
+   SIDEBAR CHARTS
+══════════════════════════════════════════════════════ */
+.side-card{background:var(--card);border:1px solid var(--b1);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh);margin-bottom:16px}
+.side-ch{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--b1)}
+.side-ct{font-family:var(--fr);font-size:15px;font-weight:700;color:var(--navy);letter-spacing:.01em}
+.side-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.cwrap{padding:14px;display:flex;flex-direction:column;align-items:center}
+.cdb{position:relative;width:180px;height:180px}
+.cdc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.cdcv{font-family:var(--fd);font-size:16px;font-weight:900;color:var(--navy);line-height:1}
+.cdcl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.aleg{width:100%;margin-top:14px}
+.li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--b2)}
+.li:last-child{border-bottom:none}
+.ld{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ln{font-size:13px;color:var(--navy);flex:1;font-weight:500}
+.lp{font-family:var(--fm);font-size:11px;color:var(--muted);min-width:30px;text-align:right}
+.lv{font-family:var(--fm);font-size:11px;color:var(--navy)}
+
+/* Mini bars */
+.brs{padding:4px 0}
+.br{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.bn{font-size:11px;color:var(--muted);width:80px;flex-shrink:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.bt{flex:1;height:7px;background:var(--s3);border-radius:4px;overflow:hidden}
+.bf{height:100%;border-radius:4px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.bv{font-family:var(--fm);font-size:11px;color:var(--navy);width:36px;text-align:right;flex-shrink:0;font-weight:500}
+
+/* Market movers */
+.mover{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--b2)}
+.mover:last-child{border-bottom:none}
+.mv-t{font-family:var(--fm);font-size:12px;font-weight:700;color:var(--navy)}
+.mv-n{font-size:10px;color:var(--muted);margin-top:1px}
+.mv-p{font-family:var(--fm);font-size:12px;font-weight:500}
+.mv-chg{font-family:var(--fm);font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px}
+.mv-up{background:rgba(10,110,94,.08);color:var(--green)}
+.mv-dn{background:rgba(200,34,46,.08);color:var(--red)}
+
+/* Div calendar */
+.dcal-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b2)}
+.dcal-item:last-child{border-bottom:none}
+.dcal-date{background:var(--red);color:#fff;border-radius:6px;padding:4px 8px;text-align:center;flex-shrink:0;min-width:44px}
+.dcal-day{font-family:var(--fm);font-size:14px;font-weight:700;line-height:1}
+.dcal-mon{font-size:8px;letter-spacing:.08em;text-transform:uppercase;margin-top:1px;font-family:var(--fu);font-weight:700}
+.dcal-info{flex:1}
+.dcal-t{font-family:var(--fm);font-size:12px;font-weight:700;color:var(--navy)}
+.dcal-n{font-size:11px;color:var(--muted)}
+.dcal-amt{font-family:var(--fm);font-size:13px;font-weight:700;color:var(--green)}
+
+/* ═══════════════════════════════════════════════════════
+   WATCHLIST
+══════════════════════════════════════════════════════ */
+.wl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px 18px}
+.wl-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r2);padding:14px;position:relative;transition:all .18s}
+.wl-card:hover{box-shadow:var(--sh);transform:translateY(-1px)}
+.wl-t{font-family:var(--fm);font-size:14px;font-weight:700;color:var(--navy)}
+.wl-n{font-size:11px;color:var(--muted);margin-bottom:8px}
+.wl-p{font-family:var(--fd);font-size:22px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.wl-chg{font-family:var(--fm);font-size:11px;font-weight:700}
+.wl-alert{display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)}
+.wl-al{flex:1;font-size:10px}
+.wl-al-l{color:var(--muted);margin-bottom:2px}
+.wl-al-v{font-family:var(--fm);font-size:12px;font-weight:500;color:var(--navy)}
+.wl-del{position:absolute;top:10px;right:10px}
+
+/* ═══════════════════════════════════════════════════════
+   PRICE TABLE
+══════════════════════════════════════════════════════ */
+.pxi{background:rgba(200,34,46,.04);border:1px solid rgba(200,34,46,.12);border-radius:4px;padding:4px 7px;font-family:var(--fm);font-size:12px;color:var(--text);text-align:right;transition:all .18s}
+.pxi:focus{outline:none;border-color:var(--red);background:rgba(200,34,46,.06);box-shadow:0 0 0 2px rgba(200,34,46,.08)}
+.upd-flash{animation:flash .4s ease}
+@keyframes flash{0%,100%{background:rgba(200,34,46,.04)}50%{background:rgba(0,200,150,.15)}}
+
+/* ═══════════════════════════════════════════════════════
+   INCOME PILLS
+══════════════════════════════════════════════════════ */
+.ipills{display:flex;gap:8px;padding:14px 18px;border-top:1px solid var(--b1);flex-wrap:wrap}
+.ip{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 14px}
+.ipd{width:8px;height:8px;border-radius:50%}
+.ipl{font-size:10px;color:var(--muted);font-family:var(--fu)}
+.ipv{font-family:var(--fm);font-size:13px;color:var(--navy);font-weight:500;margin-left:2px}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════════════════ */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy);color:#fff;padding:12px 20px;border-radius:var(--r2);font-size:13px;display:none;z-index:9999;box-shadow:0 4px 24px rgba(0,0,0,.3);animation:tsl .25s ease;border-left:4px solid var(--red);max-width:320px}
+@keyframes tsl{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+
+/* Note bar */
+.nb{padding:10px 18px;font-size:11px;color:var(--muted);background:var(--s2);border-top:1px solid var(--b1);font-style:italic}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════════════════ */
+
+/* ═══ TABLET ≤ 1100px ═══════════════════════════════════════════ */
+@media(max-width:1100px){
+  .layout{grid-template-columns:1fr}
+  .lside{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .lside .side-card:last-child{grid-column:1/-1}
+}
+
+/* ═══ MOBILE ≤ 768px ════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* Page */
+  .page{padding:10px 12px}
+
+  /* Ticker — smaller */
+  .ts{height:24px}
+  .ti{padding:0 12px;font-size:9px}
+  .tn{font-size:8px}
+
+  /* Header — stack vertically */
+  .hdr{height:auto;padding:12px 14px;flex-direction:column;align-items:flex-start;gap:10px;top:24px}
+  .bname{font-size:16px}
+  .hdr-mid{width:100%;overflow-x:auto;scrollbar-width:none}
+  .hdr-mid::-webkit-scrollbar{display:none}
+  .idx-pill{gap:10px;padding:6px 12px}
+  .idx-v{font-size:12px}
+  .hdr-right{width:100%;justify-content:space-between;flex-wrap:nowrap}
+  .rfsh-wrap{flex:1}
+  .rfsh-lbl{font-size:8px}
+
+  /* Hero card — stack to single column */
+  .hero-card{grid-template-columns:1fr !important}
+  .hero-card>div[style*="background:rgba(255,255,255,.07)"]{height:1px;width:auto !important}
+  .hero-card .hero-section{padding:20px 18px !important}
+
+  /* Hero numbers smaller on mobile */
+  .hero-card [id="m-tot"],
+  .hero-card [id="m-gl"],
+  .hero-card [id="m-inc"]{font-size:28px !important}
+
+  /* Support cards — 2 columns */
+  .support-cards{grid-template-columns:repeat(2,1fr) !important}
+
+  /* Tabs — scrollable, larger touch targets */
+  .tabs{gap:0;padding-bottom:0}
+  .tab{font-size:11px;padding:10px 12px;min-height:44px;flex-shrink:0}
+
+  /* Main layout — single col, sidebar below */
+  .layout{grid-template-columns:1fr}
+  .lside{display:flex;flex-direction:column;gap:10px;order:2}
+
+  /* Forms — single column always */
+  .fg2,.fg3,.fg4,.fg5{grid-template-columns:1fr !important}
+
+  /* MMF / SACCO grids — single column */
+  .mfg{grid-template-columns:1fr !important}
+  #sc-grid.mfg,.mfg{grid-template-columns:1fr !important}
+
+  /* Watchlist grid — single column */
+  .wl-grid{grid-template-columns:1fr !important}
+
+  /* Mansa-X fund cards — single column */
+  #mx-fund-cards{grid-template-columns:1fr !important}
+
+  /* Tables — allow horizontal scroll, freeze first column */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{min-width:540px}
+  th,td{padding:8px 10px;font-size:11px}
+
+  /* Buttons — touch-friendly min size */
+  .btn{min-height:40px;padding:8px 14px}
+  .btn-sm{min-height:36px;padding:6px 12px}
+
+  /* Card header wraps */
+  .ch{flex-wrap:wrap;gap:8px;padding:10px 14px}
+  .ch-right{width:100%;justify-content:flex-start}
+
+  /* Control bar wraps */
+  .ctrl{flex-wrap:wrap;gap:7px;padding:9px 12px}
+  .search-wrap{min-width:100%;max-width:100%}
+  .sf-wrap{gap:4px}
+  .sf{padding:6px 10px;min-height:34px;font-size:9px}
+
+  /* FI tabs */
+  .fitabs{gap:4px;padding:10px 12px 0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
+  .fitabs::-webkit-scrollbar{display:none}
+  .fit{flex-shrink:0;min-height:34px}
+
+  /* Allocation chart — smaller */
+  .cdb{width:140px;height:140px}
+
+  /* Sidebar 2-col on tablet stays, 1-col on mobile */
+  .lside{display:flex;flex-direction:column}
+
+  /* Rate tables — scrollable */
+  #sc-rates-table,#mmf-rates-table{overflow-x:auto}
+  #sc-rates-table table,#mmf-rates-table table{min-width:520px}
+}
+
+/* ═══ SMALL MOBILE ≤ 480px ══════════════════════════════════════ */
+@media(max-width:480px){
+  .hdr-mid{display:none} /* hide NASI box on tiny screens */
+  .bname{font-size:14px}
+  .bsub{display:none}
+  .hero-card [id="m-tot"],
+  .hero-card [id="m-gl"],
+  .hero-card [id="m-inc"]{font-size:24px !important}
+  .support-cards{grid-template-columns:1fr 1fr !important}
+  .tab{padding:8px 10px;font-size:10px}
+}
+
+/* ═══ PRINT ══════════════════════════════════════════════════════ */
+@media print{
+  .ts,.hdr,.btn,.db,.sf,.fitabs,.ctrl,.af,.tabs{display:none!important}
+  .panel{display:block!important}
+  .card,.mc{border:1px solid #ccc;background:#fff}
+  .page{padding:0}
+  .hero-card{grid-template-columns:1fr 1px 1fr 1px 1fr !important}
+}
+</style>
+</head>
+<body>
+
+<!-- TICKER -->
+<div class="ts"><div class="tt" id="tt">
+  <span class="ti"><span class="tn">EQTY</span><span class="tv">75.25</span><span class="tu">▲ 0.33%</span></span>
+    <span class="ti"><span class="tn">BKG</span><span class="tv">54.25</span><span class="tu">▲ 5.34%</span></span>
+    <span class="ti"><span class="tn">KCB</span><span class="tv">66.75</span><span class="td2">▼ 0.37%</span></span>
+    <span class="ti"><span class="tn">AMAC</span><span class="tv">110.00</span><span class="tu">▲ 7.84%</span></span>
+    <span class="ti"><span class="tn">COOP</span><span class="tv">31.80</span><span class="tu">▲ 0.32%</span></span>
+    <span class="ti"><span class="tn">ABSA</span><span class="tv">28.60</span><span class="td2">▼ 0.69%</span></span>
+    <span class="ti"><span class="tn">EABL</span><span class="tv">245.50</span><span class="tu">▲ 3.59%</span></span>
+    <span class="ti"><span class="tn">SCBK</span><span class="tv">341.25</span><span class="tu">▲ 0.74%</span></span>
+    <span class="ti"><span class="tn">JUB</span><span class="tv">366.00</span><span class="td2">▼ 3.17%</span></span>
+    <span class="ti"><span class="tn">BAT</span><span class="tv">511.00</span><span class="td2">▼ 0.78%</span></span>
+    <span class="ti"><span class="tn">BRIT</span><span class="tv">12.60</span><span class="tu">▲ 0.80%</span></span>
+    <span class="ti"><span class="tn">SCOM</span><span class="tv">30.50</span><span class="td2">▼ 1.77%</span></span>
+    <span class="ti"><span class="tn">DTK</span><span class="tv">150.00</span><span class="tu">▲ 0.33%</span></span>
+    <span class="ti"><span class="tn">IMH</span><span class="tv">49.70</span><span class="td2">▼ 2.07%</span></span>
+    <span class="ti"><span class="tn">HFCK</span><span class="tv">9.16</span><span class="td2">▼ 1.51%</span></span>
+    <span class="ti"><span class="tn">KPC</span><span class="tv">9.10</span><span class="td2">▼ 0.44%</span></span>
+    <span class="ti"><span class="tn">KPLC</span><span class="tv">16.05</span><span class="td2">▼ 0.62%</span></span>
+    <span class="ti"><span class="tn">KEGN</span><span class="tv">9.20</span><span class="td2">▼ 0.43%</span></span>
+    <span class="ti"><span class="tn">CBR</span><span class="tv">8.75%</span><span class="tn">HELD</span></span>
+    <span class="ti"><span class="tn">USD/KES</span><span class="tv">129.08</span></span>
+      <span class="ti"><span class="tn">EQTY</span><span class="tv">75.25</span><span class="tu">▲ 0.33%</span></span>
+    <span class="ti"><span class="tn">BKG</span><span class="tv">54.25</span><span class="tu">▲ 5.34%</span></span>
+    <span class="ti"><span class="tn">KCB</span><span class="tv">66.75</span><span class="td2">▼ 0.37%</span></span>
+    <span class="ti"><span class="tn">AMAC</span><span class="tv">110.00</span><span class="tu">▲ 7.84%</span></span>
+    <span class="ti"><span class="tn">COOP</span><span class="tv">31.80</span><span class="tu">▲ 0.32%</span></span>
+    <span class="ti"><span class="tn">ABSA</span><span class="tv">28.60</span><span class="td2">▼ 0.69%</span></span>
+    <span class="ti"><span class="tn">EABL</span><span class="tv">245.50</span><span class="tu">▲ 3.59%</span></span>
+    <span class="ti"><span class="tn">SCBK</span><span class="tv">341.25</span><span class="tu">▲ 0.74%</span></span>
+    <span class="ti"><span class="tn">JUB</span><span class="tv">366.00</span><span class="td2">▼ 3.17%</span></span>
+    <span class="ti"><span class="tn">BAT</span><span class="tv">511.00</span><span class="td2">▼ 0.78%</span></span>
+    <span class="ti"><span class="tn">BRIT</span><span class="tv">12.60</span><span class="tu">▲ 0.80%</span></span>
+    <span class="ti"><span class="tn">SCOM</span><span class="tv">30.50</span><span class="td2">▼ 1.77%</span></span>
+    <span class="ti"><span class="tn">DTK</span><span class="tv">150.00</span><span class="tu">▲ 0.33%</span></span>
+    <span class="ti"><span class="tn">IMH</span><span class="tv">49.70</span><span class="td2">▼ 2.07%</span></span>
+    <span class="ti"><span class="tn">HFCK</span><span class="tv">9.16</span><span class="td2">▼ 1.51%</span></span>
+    <span class="ti"><span class="tn">KPC</span><span class="tv">9.10</span><span class="td2">▼ 0.44%</span></span>
+    <span class="ti"><span class="tn">KPLC</span><span class="tv">16.05</span><span class="td2">▼ 0.62%</span></span>
+    <span class="ti"><span class="tn">KEGN</span><span class="tv">9.20</span><span class="td2">▼ 0.43%</span></span>
+    <span class="ti"><span class="tn">CBR</span><span class="tv">8.75%</span><span class="tn">HELD</span></span>
+    <span class="ti"><span class="tn">USD/KES</span><span class="tv">129.08</span></span>
+  </div></div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="brand">
+    <div>
+      <div class="bname"><span class="red">Afrivest</span> Portfolio Tracker</div>
+      <div class="bsub">Nairobi Securities Exchange · Kenya</div>
+    </div>
+  </div>
+  <div class="hdr-mid">
+    <div class="idx-pill">
+      <div class="idx-item"><div class="idx-l">NASI</div><div class="idx-v" id="h-nasi">206.64</div><div class="idx-c td2" id="h-nasi-c">▼ 0.50%</div></div>
+      <div class="idx-sep"></div>
+      <div class="idx-item"><div class="idx-l">Mkt Cap</div><div class="idx-v" style="font-size:13px">KES 3.47T</div><div class="idx-c" style="color:rgba(255,255,255,.4)">56 listed</div></div>
+      <div class="idx-sep"></div>
+      <div class="idx-item"><div class="idx-l">Volume</div><div class="idx-v" style="font-size:13px" id="h-vol">12.62M</div><div class="idx-c" style="color:rgba(255,255,255,.4)">shares</div></div>
+      <div class="idx-sep"></div>
+      <div class="idx-item"><div class="idx-l">USD/KES</div><div class="idx-v" style="font-size:13px">129.08</div><div class="idx-c" style="color:rgba(255,255,255,.4)">Spot</div></div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div class="rfsh-wrap">
+      <div class="rfsh-lbl" id="rfsh-ts">Last: 15 May 2026 · TradingView (NSEKE) · Live</div>
+      <div class="rfsh-status"><div class="rfsh-dot" id="rfsh-dot"></div><span class="rfsh-txt" id="rfsh-txt">TradingView live · 15 May 2026</span></div>
+    </div>
+    <button class="btn btn-red" id="btn-refresh" onclick="doRefresh()">↻ Refresh from TradingView</button>
+    <button class="btn btn-outline btn-sm" onclick="exportCSV()">↓ CSV</button>
+    <button class="btn btn-outline btn-sm" onclick="window.print()">⎙ Print</button>
+  </div>
+</header>
+
+<!-- PAGE -->
+<div class="page">
+
+<!-- METRICS -->
+<div id="metrics" style="margin-bottom:18px">
+
+  <!-- ══ MERGED HERO CARD ═══════════════════════════════════════ -->
+  <div class="hero-card" style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;background:linear-gradient(145deg,#090e1c 0%,#0f1624 40%,#111826 100%);border-radius:14px;box-shadow:0 8px 48px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.06);overflow:hidden;border:1px solid rgba(255,255,255,.06);margin-bottom:12px">
+
+    <!-- Section 1: Total Portfolio -->
+    <div class="hero-section" style="padding:28px 32px;position:relative;overflow:hidden">
+      <div style="position:absolute;bottom:-36px;right:-36px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.1),transparent 65%)"></div>
+      <div style="font-family:var(--fu);font-size:9px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px">Total Portfolio Value</div>
+      <div style="width:36px;height:3px;border-radius:2px;background:linear-gradient(90deg,#f5a623,transparent);margin-bottom:16px"></div>
+      <div style="font-family:var(--fd);font-size:38px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em;margin-bottom:8px" id="m-tot">KES 0</div>
+      <div style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.38)" id="m-tot-s">Cost basis: KES 0</div>
+    </div>
+
+    <!-- Separator 1 -->
+    <div style="background:rgba(255,255,255,.07)"></div>
+
+    <!-- Section 2: Unrealised P&L -->
+    <div id="mc-gl" class="hero-section" style="padding:28px 32px;position:relative;overflow:hidden">
+      <div style="position:absolute;bottom:-36px;right:-36px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(200,34,46,.14),transparent 65%)" id="mc-gl-orb"></div>
+      <div style="font-family:var(--fu);font-size:9px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px">Unrealised P&amp;L</div>
+      <div style="width:36px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--red),transparent);margin-bottom:16px" id="mc-gl-rule"></div>
+      <div style="font-family:var(--fd);font-size:38px;font-weight:900;color:#fff;line-height:1;letter-spacing:-.02em;margin-bottom:8px" id="m-gl">KES 0</div>
+      <div style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.38)" id="m-glp">0.00% return on equities</div>
+    </div>
+
+    <!-- Separator 2 -->
+    <div style="background:rgba(255,255,255,.07)"></div>
+
+    <!-- Section 3: Annual Income -->
+    <div class="hero-section" style="padding:28px 32px;position:relative;overflow:hidden">
+      <div style="position:absolute;bottom:-36px;right:-36px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(196,123,10,.12),transparent 65%)"></div>
+      <div style="font-family:var(--fu);font-size:9px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.18em;margin-bottom:6px">Total Annual Income</div>
+      <div style="width:36px;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--gold2),transparent);margin-bottom:16px"></div>
+      <div style="font-family:var(--fd);font-size:38px;font-weight:900;color:var(--gold2);line-height:1;letter-spacing:-.02em;margin-bottom:8px" id="m-inc">KES 0</div>
+      <div style="font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.38)" id="m-yld">0.00% portfolio yield · all sources</div>
+    </div>
+
+  </div>
+
+  <!-- ══ SUPPORT CARDS ════════════════════════════════════════════ -->
+  <div class="support-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+
+    <!-- NSE Equities -->
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#00c896 40%,transparent)"></div>
+      <div style="font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;white-space:nowrap">📊 NSE Equities</div>
+      <div style="font-family:var(--fd);font-size:21px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px" id="m-pos">0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="m-sec">No holdings</div>
+    </div>
+
+    <!-- Fixed Income -->
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#4a9eff 40%,transparent)"></div>
+      <div style="font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;white-space:nowrap">📄 Fixed Income</div>
+      <div style="font-family:var(--fd);font-size:21px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px" id="m-fi">KES 0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="m-fi-s">KES 0 net/yr</div>
+    </div>
+
+    <!-- Money Market -->
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#a060e0 40%,transparent)"></div>
+      <div style="font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;white-space:nowrap">🏦 Money Market</div>
+      <div style="font-family:var(--fd);font-size:21px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px" id="m-mmf">KES 0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="m-mmf-s">KES 0 net/yr</div>
+    </div>
+
+    <!-- SACCO -->
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#f5a623 40%,transparent)"></div>
+      <div style="font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;white-space:nowrap">🤝 SACCO</div>
+      <div style="font-family:var(--fd);font-size:21px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px" id="m-sc">KES 0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="m-sc-s">KES 0/yr income</div>
+    </div>
+
+    <!-- Special Funds -->
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden;box-shadow:var(--sh)">
+      <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#8a2be2 40%,transparent)"></div>
+      <div style="font-family:var(--fu);font-size:10px;font-weight:700;color:var(--muted);margin-bottom:7px;white-space:nowrap">🌍 Special Funds</div>
+      <div style="font-family:var(--fd);font-size:21px;font-weight:900;color:var(--navy);line-height:1;margin-bottom:4px" id="m-mx">KES 0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--fm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="m-mx-s">KES 0/yr projected</div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- LAYOUT -->
+<div class="layout">
+<div class="lmain" style="min-width:0">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="eq">📈 NSE Holdings</button>
+    <button class="tab" data-tab="wl">👁 Watchlist <span class="tab-badge" id="wl-badge">0</span></button>
+    <button class="tab" data-tab="fi">📄 Fixed Income</button>
+    <button class="tab" data-tab="mf">💰 MMF</button>
+    <button class="tab" data-tab="sc">🏦 SACCO</button>
+    <button class="tab" data-tab="mx">🌍 Special Funds</button>
+    <button class="tab" data-tab="px">🔄 All Prices</button>
+  </div>
+
+  <!-- NSE HOLDINGS -->
+  <div id="eq" class="panel">
+    <div class="card">
+      <div class="af" id="ef">
+        <div class="fg fg5">
+          <div><label>Stock</label><select id="et"></select></div>
+          <div><label>Shares</label><input type="number" id="es" placeholder="e.g. 1,000" min="1" step="1"></div>
+          <div><label>Buy Price (KES)</label><input type="number" id="ep" placeholder="0.00" step="0.05"></div>
+          <div><label>Target Price</label><input type="number" id="etp" placeholder="Optional" step="0.05"></div>
+          <div><label>Notes</label><input type="text" id="en" placeholder="Optional note"></div>
+        </div>
+        <div class="fa"><button class="btn btn-light btn-sm" id="ec">Cancel</button><button class="btn btn-red btn-sm" id="esv">＋ Add Position</button></div>
+      </div>
+      <div class="ctrl">
+        <div class="search-wrap"><span class="search-ico">🔍</span><input class="search-inp" type="text" id="eq-q" placeholder="Search by ticker, name or sector..."></div>
+        <div class="sf-wrap" id="sf-btns">
+          <button class="sf on" data-s="">All</button>
+          <button class="sf" data-s="Banking">Banking</button>
+          <button class="sf" data-s="Telecom">Telecom</button>
+          <button class="sf" data-s="Consumer">Consumer</button>
+          <button class="sf" data-s="Insurance">Insurance</button>
+          <button class="sf" data-s="Energy">Energy</button>
+          <button class="sf" data-s="Agriculture">Agri</button>
+        </div>
+        <button class="btn btn-red btn-sm" id="eo">＋ Add Stock</button>
+      </div>
+      <div class="tw">
+        <table id="eqt">
+          <thead><tr>
+            <th data-col="name">Stock <span class="sa">↕</span></th>
+            <th data-col="sector">Sector</th>
+            <th class="r" data-col="shares">Shares <span class="sa">↕</span></th>
+            <th class="r" data-col="price">Price <span class="sa">↕</span></th>
+            <th class="r" data-col="value">Market Value <span class="sa">↕</span></th>
+            <th class="r" data-col="pl">P&amp;L <span class="sa">↕</span></th>
+            <th class="r" data-col="plp">Return <span class="sa">↕</span></th>
+            <th class="r" data-col="div">Annual Div <span class="sa">↕</span></th>
+            <th class="r" data-col="yield">Yield <span class="sa">↕</span></th>
+            <th class="r" data-col="target">Target <span class="sa">↕</span></th>
+            <th></th>
+          </tr></thead>
+          <tbody id="eb"><tr class="er"><td colspan="11">No holdings yet — click ＋ Add Stock to begin</td></tr></tbody>
+        </table>
+      </div>
+      <div class="nb" id="eq-nb">TradingView (NSEKE) · 15 May 2026 · Click ↻ Refresh Prices for live prices · Sort columns by clicking headers</div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST -->
+  <div id="wl" class="panel">
+    <div class="card">
+      <div class="af" id="wf">
+        <div class="fg fg4">
+          <div><label>Stock</label><select id="wt"></select></div>
+          <div><label>Alert Low (KES)</label><input type="number" id="wal" placeholder="Buy below..." step="0.05"></div>
+          <div><label>Alert High (KES)</label><input type="number" id="wah" placeholder="Sell above..." step="0.05"></div>
+          <div><label>Note</label><input type="text" id="wn" placeholder="Why watching..."></div>
+        </div>
+        <div class="fa"><button class="btn btn-light btn-sm" id="wc">Cancel</button><button class="btn btn-red btn-sm" id="wsv">＋ Add to Watchlist</button></div>
+      </div>
+      <div class="ch">
+        <div class="ch-left"><div class="ct">Watchlist</div><div class="csub">Track stocks before you buy · Set price alerts</div></div>
+        <button class="btn btn-red btn-sm" id="wo">＋ Add Stock</button>
+      </div>
+      <div id="wlg" class="wl-grid"><div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">Your watchlist is empty — add stocks to track</div></div>
+    </div>
+  </div>
+
+  <!-- FIXED INCOME -->
+  <div id="fi" class="panel">
+    <div class="card">
+      <div class="fitabs">
+        <button class="fit active" data-fi="IFB">Infrastructure Bond</button>
+        <button class="fit" data-fi="TBill">T-Bill</button>
+        <button class="fit" data-fi="TBond">T-Bond</button>
+        <button class="fit" data-fi="FD">Fixed Deposit</button>
+      </div>
+      <div class="af" id="ff">
+        <div class="fg fg4">
+          <div><label>Description</label><input type="text" id="fn" placeholder="e.g. IFB 2031 Series 2"></div>
+          <div><label>Principal (KES)</label><input type="number" id="fp" placeholder="100,000" min="0"></div>
+          <div><label>Annual Rate (%)</label><input type="number" id="fr" placeholder="14.0" step="0.01"></div>
+          <div><label>Maturity Date</label><input type="date" id="fmd"></div>
+        </div>
+        <div class="fa"><button class="btn btn-light btn-sm" id="fc">Cancel</button><button class="btn btn-red btn-sm" id="fsv">＋ Add</button></div>
+      </div>
+      <div class="ch"><div class="ch-left"><div class="ct" id="fi-t">Infrastructure Bonds</div><div class="csub" id="fi-s">0% WHT · Tax Exempt</div></div><button class="btn btn-red btn-sm" id="fo">＋ Add</button></div>
+      <div class="tw"><table><thead><tr><th>Description</th><th class="r">Principal</th><th class="r">Rate</th><th class="r">Gross / yr</th><th class="r">WHT</th><th class="r">Net / yr</th><th class="r">Maturity</th><th></th></tr></thead><tbody id="fb"><tr class="er"><td colspan="8">No positions yet</td></tr></tbody></table></div>
+      <div id="fi-pills" class="ipills"></div>
+    </div>
+  </div>
+
+  <!-- MMF -->
+  <div id="mf" class="panel">
+    <div class="card">
+      <div class="af" id="mff">
+        <div class="fg fg2" style="margin-bottom:10px">
+          <div>
+            <label>Quick-select provider</label>
+            <select id="mmf-preset" onchange="applyMmfPreset()">
+            </select>
+          </div>
+          <div id="mmf-preset-info" style="display:flex;align-items:flex-end;padding-bottom:2px">
+            <div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--muted);width:100%">
+              Select a provider above to auto-fill rate — or enter manually below
+            </div>
+          </div>
+        </div>
+        <div class="fg fg4">
+          <div><label>Fund Name</label><input type="text" id="mn" placeholder="e.g. CIC Money Market Fund"></div>
+          <div><label>Balance (KES)</label><input type="number" id="mb" placeholder="50,000" min="0"></div>
+          <div>
+            <label>Gross Rate (%)</label>
+            <input type="number" id="mr" placeholder="e.g. 11.88" step="0.01" oninput="updateMmfNetPreview()">
+            <div id="mmf-net-preview" style="font-size:10px;color:var(--green);margin-top:3px;font-family:var(--fm)"></div>
+          </div>
+          <div><label>Notes</label><input type="text" id="mno" placeholder="e.g. Account #, goals..."></div>
+        </div>
+        <div class="fa"><button class="btn btn-light btn-sm" id="mfc">Cancel</button><button class="btn btn-red btn-sm" id="mfs">＋ Add MMF</button></div>
+      </div>
+      <div class="ch">
+        <div class="ch-left">
+          <div class="ct">Money Market Funds</div>
+          <div class="csub">Net = Gross × 85% after 15% WHT · Rates: Serrari / CMA · May 2026</div>
+        </div>
+        <div class="ch-right">
+          <button class="btn btn-light btn-sm" id="mmf-show-rates" onclick="toggleMmfRates()">📊 Rate Table</button>
+          <button class="btn btn-red btn-sm" id="mfo">＋ Add MMF</button>
+        </div>
+      </div>
+      <div id="mmf-rates-table" style="display:none;border-bottom:1px solid var(--b1);overflow-x:auto">
+        <table style="font-size:12px">
+          <thead><tr><th>Fund</th><th>Manager</th><th class="r">Gross Rate</th><th class="r">Net Rate</th><th class="r">Min. Invest</th><th></th></tr></thead>
+          <tbody>
+            <tr><td style="font-weight:600">Jubilee Money Market Fund</td><td style="color:var(--muted)">Jubilee Financial Services</td><td class="r" style="color:var(--navy);font-weight:600">11.88%</td><td class="r" style="color:var(--green);font-weight:700">10.10%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('jubilee')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:600">Britam Money Market Fund</td><td style="color:var(--muted)">Britam Asset Managers</td><td class="r" style="color:var(--navy);font-weight:600">11.85%</td><td class="r" style="color:var(--green);font-weight:700">10.07%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('britam')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:600">Old Mutual / Zimele MMF</td><td style="color:var(--muted)">Old Mutual Kenya</td><td class="r" style="color:var(--navy);font-weight:600">11.58%</td><td class="r" style="color:var(--green);font-weight:700">9.84%</td><td class="r" style="color:var(--muted)">KES 100</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('oldmutual')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:600">Allianz Invesco MMF</td><td style="color:var(--muted)">Sanlam Allianz Kenya</td><td class="r" style="color:var(--navy);font-weight:600">11.18%</td><td class="r" style="color:var(--green);font-weight:700">9.50%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('allianz')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:600">Sanlam Money Market Fund</td><td style="color:var(--muted)">Sanlam Investments EA</td><td class="r" style="color:var(--navy);font-weight:600">10.69%</td><td class="r" style="color:var(--green);font-weight:700">9.09%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('sanlam')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:600">Absa Pesa Fund</td><td style="color:var(--muted)">Absa Asset Management</td><td class="r" style="color:var(--navy);font-weight:600">10.59%</td><td class="r" style="color:var(--green);font-weight:700">9.00%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('absa')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:600">CIC Money Market Fund</td><td style="color:var(--muted)">CIC Asset Management</td><td class="r" style="color:var(--navy);font-weight:600">9.92%</td><td class="r" style="color:var(--green);font-weight:700">8.43%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('cicmmf')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:600">ICEA LION MMF</td><td style="color:var(--muted)">ICEA Lion Asset Management</td><td class="r" style="color:var(--navy);font-weight:600">9.44%</td><td class="r" style="color:var(--green);font-weight:700">8.02%</td><td class="r" style="color:var(--muted)">KES 500</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('icealion')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:600">NCBA Money Market Fund</td><td style="color:var(--muted)">NCBA Investment Bank</td><td class="r" style="color:var(--navy);font-weight:600">8.54%</td><td class="r" style="color:var(--green);font-weight:700">7.26%</td><td class="r" style="color:var(--muted)">KES 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddMmf('ncba')">＋ Add</button></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 18px;font-size:10px;color:var(--muted);border-top:1px solid var(--b1)">Rates: Serrari Group / CMA Kenya · May 2026 · Net = Gross × 85% after 15% WHT · Click ＋ Add to enter your balance</div>
+      </div>
+      <div id="mfg2" class="mfg"><div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">No MMF accounts — click ＋ Add MMF</div></div>
+      <div class="tw"><table style="margin-top:0"><thead><tr><th>Provider</th><th class="r">Balance</th><th class="r">Gross</th><th class="r">Net Rate</th><th class="r">Annual Net</th><th class="r">Monthly Net</th><th></th></tr></thead><tbody id="mfb"><tr class="er"><td colspan="7">No MMF accounts yet</td></tr></tbody></table></div>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════ SACCO ═══════════════════════════════════════ -->
+  <div id="sc" class="panel">
+    <div class="card">
+      <!-- Rate comparison table (toggled) -->
+      <div id="sc-rates-table" style="display:none;border-bottom:1px solid var(--b1);overflow-x:auto">
+        <div style="padding:10px 18px 0;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">
+          2025/2026 SACCO Returns — SASRA Regulated · Annual AGM Declared Rates
+        </div>
+        <table style="font-size:12px">
+          <thead><tr>
+            <th>SACCO</th><th>Membership</th><th class="r">Assets</th>
+            <th class="r">Dividend on Shares</th><th class="r">Interest on Deposits</th>
+            <th class="r">Min. Share Capital</th><th></th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="font-weight:700">Ports SACCO Society</td><td><span class="pill s-Hospitality">Ports/Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">20.0%</td><td class="r" style="color:var(--green);font-weight:700">12.5%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('ports')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Yetu DT SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">19.0%</td><td class="r" style="color:var(--green);font-weight:700">13.0%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('yetu')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Biashara DT SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">18.0%</td><td class="r" style="color:var(--green);font-weight:700">12.0%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('biashara')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Bandari SACCO</td><td><span class="pill s-Hospitality">Ports/Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">18.0%</td><td class="r" style="color:var(--green);font-weight:700">12.0%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('bandari')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Kenya Police DT SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">KSh 66.4B</td><td class="r" style="color:var(--green);font-weight:700">17.0%</td><td class="r" style="color:var(--green);font-weight:700">11.0%</td><td class="r" style="color:var(--muted)">KSh 20,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('police')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Hazina DT SACCO</td><td><span class="pill s-Investment">Civil Servants</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">17.0%</td><td class="r" style="color:var(--green);font-weight:700">10.75%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('hazina')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Stima SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">KSh 75B</td><td class="r" style="color:var(--green);font-weight:700">16.0%</td><td class="r" style="color:var(--green);font-weight:700">11.0%</td><td class="r" style="color:var(--muted)">KSh 25,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('stima')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Tower DT SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">KSh 28B</td><td class="r" style="color:var(--green);font-weight:700">16.0%</td><td class="r" style="color:var(--green);font-weight:700">10.5%</td><td class="r" style="color:var(--muted)">KSh 5,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('tower')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Harambee SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">KSh 41.3B</td><td class="r" style="color:var(--green);font-weight:700">15.0%</td><td class="r" style="color:var(--green);font-weight:700">9.1%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('harambee')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Daima SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">15.0%</td><td class="r" style="color:var(--green);font-weight:700">10.0%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('daima')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Mwalimu National SACCO</td><td><span class="pill s-Investment">Teachers only</span></td><td class="r" style="color:var(--muted)">KSh 76.3B</td><td class="r" style="color:var(--green);font-weight:700">13.0%</td><td class="r" style="color:var(--green);font-weight:700">10.05%</td><td class="r" style="color:var(--muted)">—</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('mwalimu')">＋ Add</button></td></tr>
+            <tr style="background:var(--s2)"><td style="font-weight:700">Unaitas SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">13.0%</td><td class="r" style="color:var(--green);font-weight:700">9.5%</td><td class="r" style="color:var(--muted)">KSh 1,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('unaitas')">＋ Add</button></td></tr>
+            <tr><td style="font-weight:700">Imarika DT SACCO</td><td><span class="pill s-Telecom">Open</span></td><td class="r" style="color:var(--muted)">N/A</td><td class="r" style="color:var(--green);font-weight:700">14.0%</td><td class="r" style="color:var(--green);font-weight:700">10.0%</td><td class="r" style="color:var(--muted)">KSh 2,000</td><td><button class="btn btn-red btn-xs" onclick="quickAddSacco('imarika')">＋ Add</button></td></tr>
+          </tbody>
+        </table>
+        <div style="padding:8px 18px;font-size:10px;color:var(--muted);border-top:1px solid var(--b1)">
+          Source: SASRA / AGM Reports 2025/2026 · Dividend = on share capital (annual) · Deposit interest = on BOSA/FOSA savings · WHT: 5% on dividends · 15% on deposit interest · Some SACCOs have restricted membership
+        </div>
+      </div>
+
+      <!-- Add form -->
+      <div class="af" id="scf">
+        <div class="fg fg2" style="margin-bottom:10px">
+          <div>
+            <label>Quick-select SACCO</label>
+            <select id="sc-preset" onchange="applySaccoPreset()"></select>
+          </div>
+          <div id="sc-preset-info" style="display:flex;align-items:flex-end;padding-bottom:2px">
+            <div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--muted);width:100%">
+              Select a SACCO above to auto-fill rates — or enter manually below
+            </div>
+          </div>
+        </div>
+        <div class="fg fg4">
+          <div>
+            <label>SACCO Name</label>
+            <input type="text" id="scn" placeholder="e.g. Stima SACCO">
+          </div>
+          <div>
+            <label>Share Capital (KES)</label>
+            <input type="number" id="scs" placeholder="e.g. 100,000" min="0">
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Your invested shares</div>
+          </div>
+          <div>
+            <label>Deposits / BOSA (KES)</label>
+            <input type="number" id="scd" placeholder="e.g. 500,000" min="0">
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Savings & deposits balance</div>
+          </div>
+          <div>
+            <label>Notes</label>
+            <input type="text" id="scno" placeholder="Member no., goals...">
+          </div>
+        </div>
+        <div class="fg fg4" style="margin-top:-4px">
+          <div>
+            <label>Dividend Rate on Shares (%)</label>
+            <input type="number" id="scdr" placeholder="e.g. 16.0" step="0.01">
+            <div id="sc-div-preview" style="font-size:10px;color:var(--green);margin-top:3px;font-family:var(--fm)"></div>
+          </div>
+          <div>
+            <label>Interest Rate on Deposits (%)</label>
+            <input type="number" id="scir" placeholder="e.g. 11.0" step="0.01">
+            <div id="sc-dep-preview" style="font-size:10px;color:var(--green);margin-top:3px;font-family:var(--fm)"></div>
+          </div>
+          <div style="grid-column:span 2">
+            <label>Estimated Annual Return</label>
+            <div id="sc-total-preview" style="background:rgba(10,110,94,.06);border:1px solid rgba(10,110,94,.15);border-radius:var(--r3);padding:8px 12px;font-size:13px;color:var(--navy);font-family:var(--fm);min-height:36px">—</div>
+          </div>
+        </div>
+        <div class="fa">
+          <button class="btn btn-light btn-sm" id="scc">Cancel</button>
+          <button class="btn btn-red btn-sm" id="scsv">＋ Add SACCO</button>
+        </div>
+      </div>
+
+      <div class="ch">
+        <div class="ch-left">
+          <div class="ct">SACCO Investments</div>
+          <div class="csub">Share capital dividends + deposit interest · SASRA-regulated · Annual returns</div>
+        </div>
+        <div class="ch-right">
+          <button class="btn btn-light btn-sm" id="sc-show-rates" onclick="toggleScRates()">📊 Rate Table</button>
+          <button class="btn btn-red btn-sm" id="sco">＋ Add SACCO</button>
+        </div>
+      </div>
+
+      <!-- SACCO cards grid -->
+      <div id="sc-grid" class="mfg">
+        <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">No SACCO investments yet — click ＋ Add SACCO or use the Rate Table above</div>
+      </div>
+
+      <!-- SACCO summary table -->
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>SACCO</th>
+            <th class="r">Share Capital</th>
+            <th class="r">Deposits</th>
+            <th class="r">Div Rate</th>
+            <th class="r">Div Income</th>
+            <th class="r">Dep Rate</th>
+            <th class="r">Dep Interest</th>
+            <th class="r">Total Income</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="sc-tbody">
+            <tr class="er"><td colspan="9">No SACCO investments yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="sc-pills" class="ipills"></div>
+      <div class="nb">Returns per SASRA / AGM reports 2025/2026 · Dividend WHT: 5% · Deposit interest WHT: 15% · Amounts shown are gross before WHT deduction</div>
+    </div>
+  </div>
+
+
+  <!-- ALL PRICES -->
+
+  <!-- ═══════════════ MANSA-X SPECIAL FUNDS ═══════════════════════ -->
+  <div id="mx" class="panel">
+
+    <!-- Info banner -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="padding:16px 20px;display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
+        <div style="flex:1;min-width:260px">
+          <div style="font-family:var(--fd);font-size:18px;font-weight:900;color:var(--navy);margin-bottom:4px">Mansa-X Special Funds</div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:10px">Managed by Standard Investment Bank (SIB) · CMA-regulated · AUM $1 billion+ · Kenya's largest Special CIS</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <span class="pill s-Energy" style="font-size:11px;padding:3px 10px">Global Markets</span>
+            <span class="pill s-Telecom" style="font-size:11px;padding:3px 10px">NYSE · LSE · FRA · HKG</span>
+            <span class="pill s-Investment" style="font-size:11px;padding:3px 10px">Multi-Asset Strategy</span>
+            <span class="pill s-Agriculture" style="font-size:11px;padding:3px 10px">Shariah Options</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div style="text-align:center;background:rgba(200,34,46,.05);border:1px solid rgba(200,34,46,.15);border-radius:var(--r2);padding:12px 18px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">2025 KES Return</div>
+            <div style="font-family:var(--fd);font-size:28px;font-weight:900;color:var(--red)">20.74%</div>
+            <div style="font-size:10px;color:var(--muted)">net of fees</div>
+          </div>
+          <div style="text-align:center;background:rgba(10,110,94,.05);border:1px solid rgba(10,110,94,.15);border-radius:var(--r2);padding:12px 18px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">2025 USD Return</div>
+            <div style="font-family:var(--fd);font-size:28px;font-weight:900;color:var(--green)">13.37%</div>
+            <div style="font-size:10px;color:var(--muted)">net of fees</div>
+          </div>
+          <div style="text-align:center;background:rgba(196,123,10,.05);border:1px solid rgba(196,123,10,.15);border-radius:var(--r2);padding:12px 18px">
+            <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">Total AUM</div>
+            <div style="font-family:var(--fd);font-size:28px;font-weight:900;color:var(--gold)">$1B+</div>
+            <div style="font-size:10px;color:var(--muted)">KSh 129 billion</div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:10px 20px;background:var(--s2);border-top:1px solid var(--b1);font-size:11px;color:var(--muted)">
+        ⚠ Returns are variable and not guaranteed. Performance fee: 10% on returns above 25% hurdle rate. Minimum investment: KES 250,000 / USD 2,500. Managed by Standard Investment Bank · invest@sib.co.ke · +254 777 333 000
+      </div>
+    </div>
+
+    <!-- Fund cards — all 4 options -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:16px" id="mx-fund-cards"></div>
+
+    <!-- Holdings card -->
+    <div class="card card-last">
+      <div class="af" id="mxf">
+        <div class="fg fg4">
+          <div>
+            <label>Fund</label>
+            <select id="mx-fund-sel" onchange="applyMxPreset()"></select>
+          </div>
+          <div>
+            <label>Amount Invested</label>
+            <input type="number" id="mx-amt" placeholder="e.g. 500,000" min="0" oninput="updateMxPreview()">
+          </div>
+          <div>
+            <label>Expected Annual Return (%)</label>
+            <input type="number" id="mx-ret" placeholder="e.g. 20.74" step="0.01" oninput="updateMxPreview()">
+            <div id="mx-ret-hint" style="font-size:10px;color:var(--muted);margin-top:3px">Pre-filled from 2025 actual — adjust as needed</div>
+          </div>
+          <div>
+            <label>Notes</label>
+            <input type="text" id="mx-note" placeholder="Account ref, date invested...">
+          </div>
+        </div>
+        <div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:10px 14px;margin-bottom:10px;font-size:12px;font-family:var(--fm)" id="mx-preview">Select a fund above to see return projection</div>
+        <div class="fa">
+          <button class="btn btn-light btn-sm" id="mxc">Cancel</button>
+          <button class="btn btn-red btn-sm" id="mxsv">＋ Add Investment</button>
+        </div>
+      </div>
+
+      <div class="ch">
+        <div class="ch-left">
+          <div class="ct">My Mansa-X Holdings</div>
+          <div class="csub">Special Collective Investment Scheme · CMA-regulated · Returns variable</div>
+        </div>
+        <button class="btn btn-red btn-sm" id="mxo">＋ Add Investment</button>
+      </div>
+
+      <div class="tw">
+        <table>
+          <thead><tr>
+            <th>Fund</th><th>Currency</th><th class="r">Invested</th>
+            <th class="r">Expected Return</th><th class="r">Projected Income</th>
+            <th class="r">Projected Value (1yr)</th><th></th>
+          </tr></thead>
+          <tbody id="mx-tbody">
+            <tr class="er"><td colspan="7">No Mansa-X investments yet — click ＋ Add Investment</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="mx-pills" class="ipills"></div>
+      <div class="nb">Returns are projections based on expected/historical rates. Actual returns vary. Performance fee: 10% above 25% hurdle. Not capital guaranteed. Source: SIB / CMA Kenya · sib.co.ke/mansa-x</div>
+    </div>
+  </div>
+
+
+  <div id="px" class="panel">
+    <div class="card">
+      <div class="ch">
+        <div class="ch-left"><div class="ct">NSE Market Prices</div><div class="csub" id="px-ts">Mansa Markets · afx.kwayisi.org · 15 May 2026 · TradingView · Click ↻ Live Refresh for today's session</div></div>
+        <div class="ch-right"><button class="btn btn-red btn-sm" onclick="doRefresh()">↻ Live Refresh from TradingView</button><button class="btn btn-light btn-sm" onclick="resetPx()">Reset Prices</button></div>
+      </div>
+      <div class="ctrl"><div class="search-wrap"><span class="search-ico">🔍</span><input class="search-inp" type="text" id="px-q" placeholder="Filter by ticker or name..."></div></div>
+      <div class="tw"><table><thead><tr><th>Ticker</th><th>Company</th><th>Sector</th><th class="r">Price (KES)</th><th class="r">DPS (KES)</th><th class="r">Div Yield</th><th class="r">Today %</th><th>YTD</th><th>Mkt Cap</th></tr></thead><tbody id="pxb"></tbody></table></div>
+      <div class="nb">Prices sourced from Mansa Markets (mansamarkets.com/kenya) · Nairobi Securities Exchange · Click ↻ Live Refresh to fetch latest data</div>
+    </div>
+  </div>
+
+</div><!-- /lmain -->
+
+<!-- SIDEBAR -->
+<div class="lside">
+
+  <!-- Allocation Chart -->
+  <div class="side-card">
+    <div class="side-ch"><div><div class="side-ct">Allocation</div><div class="side-sub" id="alloc-total">Add positions to see</div></div></div>
+    <div class="cwrap">
+      <div class="cdb"><canvas id="ac" aria-label="Portfolio allocation"></canvas><div class="cdc"><div class="cdcv" id="ccv">—</div><div class="cdcl">Portfolio</div></div></div>
+      <div class="aleg" id="aleg"><div style="text-align:center;color:var(--muted);font-size:12px;padding:8px">Add positions to see</div></div>
+    </div>
+  </div>
+
+  <!-- Sector Weights -->
+  <div class="side-card">
+    <div class="side-ch"><div class="side-ct">Sector Weights</div></div>
+    <div style="padding:14px 16px"><div id="sbars"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No equity positions yet</div></div></div>
+  </div>
+
+  <!-- Top Holdings -->
+  <div class="side-card">
+    <div class="side-ch"><div class="side-ct">Top Holdings</div></div>
+    <div style="padding:14px 16px"><div id="tholds"><div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No positions yet</div></div></div>
+  </div>
+
+  <!-- Today's Movers (from Mansa) -->
+  <div class="side-card">
+    <div class="side-ch"><div><div class="side-ct">Today's Movers</div><div class="side-sub">TradingView · NSE Kenya · 15 May 2026</div></div></div>
+    <div style="padding:0 16px">
+      <div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.08em;padding:10px 0 5px">▲ Top Gainers · 15 May</div>
+      <div class="mover"><div><div class="mv-t">AMAC</div><div class="mv-n">Africa Mega Agricorp</div></div><div style="text-align:right"><div class="mv-p">KES 110.00</div><div><span class="mv-chg mv-up">+7.84%</span></div></div></div>
+      <div class="mover"><div><div class="mv-t">BKG</div><div class="mv-n">BK Group</div></div><div style="text-align:right"><div class="mv-p">KES 54.25</div><div><span class="mv-chg mv-up">+5.34%</span></div></div></div>
+      <div class="mover"><div><div class="mv-t">EABL</div><div class="mv-n">East African Breweries</div></div><div style="text-align:right"><div class="mv-p">KES 245.50</div><div><span class="mv-chg mv-up">+3.59%</span></div></div></div>
+      <div class="mover"><div><div class="mv-t">KAPC</div><div class="mv-n">Kapchorua Tea Kenya</div></div><div style="text-align:right"><div class="mv-p">KES 259.50</div><div><span class="mv-chg mv-up">+0.97%</span></div></div></div>
+      <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.08em;padding:10px 0 5px">▼ Top Losers · 15 May</div>
+      <div class="mover"><div><div class="mv-t">UMME</div><div class="mv-n">Umeme Ltd</div></div><div style="text-align:right"><div class="mv-p">KES 7.32</div><div><span class="mv-chg mv-dn">-5.18%</span></div></div></div>
+      <div class="mover"><div><div class="mv-t">JUB</div><div class="mv-n">Jubilee Holdings</div></div><div style="text-align:right"><div class="mv-p">KES 366.00</div><div><span class="mv-chg mv-dn">-3.17%</span></div></div></div>
+      <div class="mover"><div><div class="mv-t">CRWN</div><div class="mv-n">Crown Paints Kenya</div></div><div style="text-align:right"><div class="mv-p">KES 60.00</div><div><span class="mv-chg mv-dn">-3.23%</span></div></div></div>
+      <div class="mover" style="margin-bottom:14px"><div><div class="mv-t">IMH</div><div class="mv-n">I&amp;M Holdings</div></div><div style="text-align:right"><div class="mv-p">KES 49.70</div><div><span class="mv-chg mv-dn">-2.07%</span></div></div></div>
+    </div>
+  </div>
+
+  <!-- Dividend Calendar -->
+  <div class="side-card">
+    <div class="side-ch"><div><div class="side-ct">Dividend Calendar</div><div class="side-sub">Upcoming from your holdings</div></div></div>
+    <div style="padding:12px 16px" id="dcal"><div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Add dividend-paying stocks to see calendar</div></div>
+  </div>
+
+</div><!-- /lside -->
+</div><!-- /layout -->
+</div><!-- /page -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════════
+   DATA — Mansa Markets · Nairobi Securities Exchange · 14 May 2026
+══════════════════════════════════════════════════════ */
+const BASE={
+  // ══ BANKING ══════════════════════════════════════════════════════
+  EQTY:{n:"Equity Group Holdings",    p:75.25, dps:5.75, s:"Banking",   chg:0.33,  ytd:"+38.4%",mc:"KES 283.0B",yf:"EQTY.NR"},
+  KCB: {n:"KCB Group",                p:66.75, dps:3.00, s:"Banking",   chg:-0.37, ytd:"+70.6%",mc:"KES 214.5B",yf:"KCB.NR"},
+  COOP:{n:"Co-operative Bank",        p:31.80, dps:1.50, s:"Banking",   chg:0.32,  ytd:"+32.8%",mc:"KES 191.6B",yf:"COOP.NR"},
+  ABSA:{n:"Absa Bank Kenya",          p:28.60, dps:1.85, s:"Banking",   chg:-0.69, ytd:"+15.8%",mc:"KES 158.1B",yf:"ABSA.NR"},
+  NCBA:{n:"NCBA Group",               p:87.50, dps:4.60, s:"Banking",   chg:-0.57, ytd:"+5.0%", mc:"KES 144.2B",yf:"NCBA.NR"},
+  SCBK:{n:"Standard Chartered Bank",  p:341.25,dps:23.00,s:"Banking",   chg:0.74,  ytd:"+13.8%",mc:"KES 124.7B",yf:"SCBK.NR"},
+  SBIC:{n:"Stanbic Holdings",         p:295.25,dps:18.55,s:"Banking",   chg:-0.25, ytd:"+54.0%",mc:"KES 102.8B",yf:"SBIC.NR"},
+  IMH: {n:"I&M Holdings",             p:49.70, dps:2.25, s:"Banking",   chg:-2.07, ytd:"+25.2%",mc:"KES 83.1B", yf:"IMH.NR"},
+  DTK: {n:"Diamond Trust Bank",       p:150.00,dps:9.00, s:"Banking",   chg:0.33,  ytd:"+22.2%",mc:"KES 41.7B", yf:"DTK.NR"},
+  BKG: {n:"BK Group",                 p:54.25, dps:2.00, s:"Banking",   chg:5.34,  ytd:"+11.9%",mc:"KES 46.2B", yf:"BKG.NR"},
+  KNRE:{n:"Kenya Re-Insurance",       p:3.34,  dps:0.20, s:"Banking",   chg:-0.30, ytd:"+11.0%",mc:"KES 18.8B", yf:"KNRE.NR"},
+  HFCK:{n:"HF Group",                 p:9.16,  dps:0.00, s:"Banking",   chg:-1.51, ytd:"+3.4%", mc:"KES 17.6B", yf:"HFCK.NR"},
+  // ══ TELECOM ══════════════════════════════════════════════════════
+  SCOM:{n:"Safaricom",                p:30.50, dps:2.00, s:"Telecom",   chg:-1.77, ytd:"+0.0%", mc:"KES 1,213B",yf:"SCOM.NR"},
+  // ══ CONSUMER ═════════════════════════════════════════════════════
+  EABL:{n:"East African Breweries",   p:245.50,dps:4.00, s:"Consumer",  chg:3.59,  ytd:"+7.4%", mc:"KES 186.7B",yf:"EABL.NR"},
+  BAT: {n:"BAT Kenya",                p:511.00,dps:60.00,s:"Consumer",  chg:-0.78, ytd:"+12.5%",mc:"KES 51.6B", yf:"BAT.NR"},
+  UNGA:{n:"Unga Group",               p:27.00, dps:0.00, s:"Consumer",  chg:0.37,  ytd:"N/A",   mc:"KES 2.3B",  yf:"UNGA.NR"},
+  UCHM:{n:"Uchumi Supermarket",       p:1.79,  dps:0.00, s:"Consumer",  chg:1.13,  ytd:"N/A",   mc:"KES 796M",  yf:"UCHM.NR"},
+  // ══ INSURANCE ════════════════════════════════════════════════════
+  JUB: {n:"Jubilee Holdings",         p:366.00,dps:22.00,s:"Insurance", chg:-3.17, ytd:"+3.9%", mc:"KES 26.98B",yf:"JUB.NR"},
+  BRIT:{n:"Britam Holdings",          p:12.60, dps:0.00, s:"Insurance", chg:0.80,  ytd:"+0.4%", mc:"KES 31.67B",yf:"BRIT.NR"},
+  CIC: {n:"CIC Insurance Group",      p:4.30,  dps:0.00, s:"Insurance", chg:0.00,  ytd:"N/A",   mc:"KES 12.4B", yf:"CIC.NR"},
+  LBTY:{n:"Liberty Kenya Holdings",   p:9.80,  dps:0.00, s:"Insurance", chg:-0.41, ytd:"N/A",   mc:"KES 5.3B",  yf:"LBTY.NR"},
+  SLAM:{n:"Sanlam Kenya",             p:8.60,  dps:0.00, s:"Insurance", chg:-2.49, ytd:"N/A",   mc:"KES 1.5B",  yf:"SLAM.NR"},
+  // ══ AVIATION ═════════════════════════════════════════════════════
+  KQ:  {n:"Kenya Airways",            p:6.30,  dps:0.00, s:"Aviation",  chg:2.61,  ytd:"+40.4%",mc:"KES 30.8B", yf:"KQ.NR"},
+  // ══ ENERGY ═══════════════════════════════════════════════════════
+  KEGN:{n:"KenGen",                   p:9.20,  dps:0.90, s:"Energy",    chg:-0.43, ytd:"+0.65%",mc:"KES 60.9B", yf:"KEGN.NR"},
+  KPLC:{n:"Kenya Power & Lighting",   p:16.05, dps:0.30, s:"Energy",    chg:-0.62, ytd:"+18.0%",mc:"KES 31.2B", yf:"KPLC.NR"},
+  TOTL:{n:"TotalEnergies Kenya",      p:45.70, dps:3.45, s:"Energy",    chg:0.11,  ytd:"N/A",   mc:"KES 7.5B",  yf:"TOTL.NR"},
+  UMME:{n:"Umeme Ltd",                p:7.32,  dps:0.80, s:"Energy",    chg:-5.18, ytd:"N/A",   mc:"KES 14.1B", yf:"UMME.NR"},
+  KPC: {n:"Kenya Pipeline Company",   p:9.10,  dps:0.00, s:"Energy",    chg:-0.44, ytd:"-0.9%", mc:"KES 165.0B",yf:"KPC.NR"},
+  // ══ INDUSTRIAL ═══════════════════════════════════════════════════
+  BOC: {n:"BOC Kenya",                p:158.00,dps:12.00,s:"Industrial", chg:0.00, ytd:"+22.7%",mc:"KES 3.09B", yf:"BOC.NR"},
+  CARB:{n:"Carbacid Investments",     p:29.50, dps:1.50, s:"Industrial", chg:0.85, ytd:"N/A",   mc:"KES 7.53B", yf:"CARB.NR"},
+  CRWN:{n:"Crown Paints Kenya",       p:60.00, dps:3.00, s:"Industrial", chg:-3.23,ytd:"N/A",   mc:"KES 8.86B", yf:"CRWN.NR"},
+  PORT:{n:"EA Portland Cement",       p:78.00, dps:0.00, s:"Industrial", chg:0.65, ytd:"N/A",   mc:"KES 7.4B",  yf:"PORT.NR"},
+  SMER:{n:"Sameer Africa",            p:15.60, dps:0.00, s:"Industrial", chg:-2.50,ytd:"N/A",   mc:"KES 5.0B",  yf:"SMER.NR"},
+  // ══ INVESTMENT ═══════════════════════════════════════════════════
+  CTUM:{n:"Centum Investment",        p:13.75, dps:1.00, s:"Investment", chg:-0.72,ytd:"N/A",   mc:"KES 9.22B", yf:"CTUM.NR"},
+  CGEN:{n:"Car & General (K)",        p:79.00, dps:3.00, s:"Investment", chg:0.00, ytd:"N/A",   mc:"KES 6.36B", yf:"CGEN.NR"},
+  NSEL:{n:"Nairobi Securities Exch.", p:19.85, dps:0.70, s:"Investment", chg:-0.25,ytd:"N/A",   mc:"KES 5.36B", yf:"NSE.NR"},
+  NBV: {n:"Nairobi Business Ventures",p:1.35,  dps:0.00, s:"Investment", chg:0.75, ytd:"N/A",   mc:"KES 2.0B",  yf:"NBV.NR"},
+  // ══ MEDIA ════════════════════════════════════════════════════════
+  NMG: {n:"Nation Media Group",       p:13.15, dps:1.00, s:"Media",     chg:-0.38, ytd:"N/A",   mc:"KES 3.0B",  yf:"NMG.NR"},
+  FTGH:{n:"Flame Tree Group Holdings",p:2.10,  dps:0.00, s:"Media",     chg:-1.41, ytd:"N/A",   mc:"KES 379M",  yf:"FTGH.NR"},
+  SGL: {n:"Standard Group",           p:6.42,  dps:0.00, s:"Media",     chg:6.29,  ytd:"N/A",   mc:"KES 518M",  yf:"SGL.NR"},
+  LKL: {n:"Longhorn Publishers",      p:2.83,  dps:0.00, s:"Media",     chg:-7.82, ytd:"N/A",   mc:"KES 866M",  yf:"LKL.NR"},
+  // ══ AGRICULTURE ══════════════════════════════════════════════════
+  KUKZ:{n:"Kakuzi",                   p:417.50,dps:20.00,s:"Agriculture",chg:0.18,  ytd:"N/A",  mc:"KES 8.3B",  yf:"KUKZ.NR"},
+  SASN:{n:"Sasini",                   p:28.50, dps:1.50, s:"Agriculture",chg:-0.52, ytd:"N/A",  mc:"KES 6.2B",  yf:"SASN.NR"},
+  WTK: {n:"Williamson Tea Kenya",     p:135.00,dps:5.00, s:"Agriculture",chg:1.31,  ytd:"N/A",  mc:"KES 2.5B",  yf:"WTK.NR"},
+  KAPC:{n:"Kapchorua Tea Kenya",      p:259.50,dps:10.00,s:"Agriculture",chg:0.97,  ytd:"N/A",  mc:"KES 4.01B", yf:"KAPC.NR"},
+  LIMT:{n:"The Limuru Tea Co.",       p:480.00,dps:12.00,s:"Agriculture",chg:0.00,  ytd:"N/A",  mc:"KES 1.2B",  yf:"LIMT.NR"},
+  EGAD:{n:"Eaagads Ltd",              p:32.00, dps:0.50, s:"Agriculture",chg:1.59,  ytd:"N/A",  mc:"KES 1.1B",  yf:"EGAD.NR"},
+  AMAC:{n:"Africa Mega Agricorp",     p:110.00,dps:0.00, s:"Agriculture",chg:7.84,  ytd:"N/A",  mc:"KES 1.34B", yf:"AMAC.NR"},
+  // ══ HOSPITALITY ══════════════════════════════════════════════════
+  TPSE:{n:"TPS Eastern Africa",       p:15.60, dps:0.50, s:"Hospitality",chg:-1.27, ytd:"N/A",  mc:"KES 3.0B",  yf:"TPSE.NR"},
+  // ══ REAL ESTATE ══════════════════════════════════════════════════
+  HAFR:{n:"Home Afrika Ltd",          p:1.33,  dps:0.00, s:"RealEstate", chg:0.00,  ytd:"N/A",  mc:"KES 543M",  yf:"HAFR.NR"},
+  // ══ MANUFACTURING ════════════════════════════════════════════════
+  EVRD:{n:"Eveready East Africa",     p:1.14,  dps:0.00, s:"Manufacturing",chg:-0.87,ytd:"N/A", mc:"KES 239M",  yf:"EVRD.NR"},
+  SKL: {n:"Shri Krishana Overseas",   p:9.90,  dps:0.00, s:"Manufacturing",chg:-3.88,ytd:"N/A", mc:"KES 496M",  yf:"SKL.NR"},
+};
+
+/* ════════ MMF PROVIDER DATA (gross rates · May 2026) ═══════════
+   Net = Gross × 85% after 15% WHT. Rates from Serrari/CMA May 2026.
+══════════════════════════════════════════════════════ */
+const MMF_PROVIDERS=[
+  {id:"",          label:"— Select provider —",           rate:0,    min:0,     mgr:""},
+  {id:"jubilee",   label:"Jubilee Money Market Fund",     rate:11.88,min:1000,  mgr:"Jubilee Financial Services"},
+  {id:"britam",    label:"Britam Money Market Fund",      rate:11.85,min:1000,  mgr:"Britam Asset Managers"},
+  {id:"oldmutual", label:"Old Mutual / Zimele MMF",       rate:11.58,min:100,   mgr:"Old Mutual Kenya"},
+  {id:"sanlam",    label:"Sanlam Money Market Fund",      rate:10.69,min:1000,  mgr:"Sanlam Investments EA"},
+  {id:"allianz",   label:"Allianz Invesco MMF",           rate:11.18,min:1000,  mgr:"Sanlam Allianz Kenya"},
+  {id:"absa",      label:"Absa Pesa Fund (MMF)",          rate:10.59,min:1000,  mgr:"Absa Asset Management"},
+  {id:"cicmmf",    label:"CIC Money Market Fund",         rate:9.92, min:1000,  mgr:"CIC Asset Management"},
+  {id:"icealion",  label:"ICEA LION Money Market Fund",   rate:9.44, min:500,   mgr:"ICEA Lion Asset Management"},
+  {id:"ncba",      label:"NCBA Money Market Fund",        rate:8.54, min:1000,  mgr:"NCBA Investment Bank"},
+  {id:"custom",    label:"Custom / Other provider",       rate:0,    min:0,     mgr:""},
+];
+
+
+/* Dividend info — NSE Kenya confirmed announcements 2026 */
+const DIV_EVENTS=[
+  {t:"SBIC",name:"Stanbic Holdings",dps:18.55,exDate:"2026-05-15",payDate:"2026-05-30",type:"Final"},
+  {t:"SCBK",name:"Standard Chartered",dps:23.00,exDate:"2026-05-22",payDate:"2026-05-30",type:"Final"},
+  {t:"EQTY",name:"Equity Group",dps:5.75,exDate:"2026-05-22",payDate:"2026-06-05",type:"Final"},
+  {t:"DTK",name:"Diamond Trust Bank",dps:9.00,exDate:"2026-05-22",payDate:"2026-06-06",type:"Final"},
+  {t:"IMH",name:"I&M Holdings",dps:2.25,exDate:"2026-05-21",payDate:"2026-06-03",type:"Final"},
+  {t:"ABSA",name:"Absa Bank Kenya",dps:1.85,exDate:"2026-05-19",payDate:"2026-05-30",type:"Final"},
+  {t:"KCB",name:"KCB Group",dps:3.00,exDate:"2026-06-15",payDate:"2026-06-30",type:"Final"},
+  {t:"COOP",name:"Co-operative Bank",dps:1.50,exDate:"2026-06-01",payDate:"2026-06-15",type:"Final"},
+  {t:"NCBA",name:"NCBA Group",dps:4.60,exDate:"2026-05-30",payDate:"2026-06-10",type:"Final"},
+  {t:"BAT",name:"BAT Kenya",dps:60.00,exDate:"2026-05-08",payDate:"2026-06-01",type:"Final"},
+  {t:"JUB",name:"Jubilee Holdings",dps:22.00,exDate:"2026-06-20",payDate:"2026-07-05",type:"Final"},
+  {t:"KUKZ",name:"Kakuzi",dps:20.00,exDate:"2026-06-10",payDate:"2026-06-25",type:"Final"},
+];
+
+const SO=["Banking","Telecom","Consumer","Insurance","Aviation","Energy","Industrial","Investment","Media","Agriculture","Hospitality","RealEstate","Manufacturing"];
+const SC={Banking:"#6ab4ff",Telecom:"#4dffc0",Consumer:"#f5a623",Insurance:"#ff8a8a",Aviation:"#a0a0c8",Energy:"#90e060",Industrial:"#e0b060",Investment:"#c080ff",Media:"#ffb070",Agriculture:"#80d080",Hospitality:"#f08060",RealEstate:"#80b0c0",Manufacturing:"#b0b060"};
+const FWT={IFB:0,TBill:.15,TBond:.15,FD:.15};
+const FTT={IFB:["Infrastructure Bonds","0% WHT · Tax Exempt"],TBill:["Treasury Bills","15% WHT"],TBond:["Treasury Bonds","15% WHT"],FD:["Fixed Deposits","15% WHT"]};
+
+let PX=JSON.parse(JSON.stringify(BASE));
+let ST={eq:[],fi:[],mf:[],wl:[],sc:[],mx:[]};
+let CFT="IFB",sCol=null,sDir=-1,fSec="",srch="",pxSrch="";
+let allocC=null,refreshTimer=null;
+
+/* ════════ FORMAT ════════════════════════════════════════ */
+const N=n=>isNaN(n)||!isFinite(n)?"—":Math.round(n).toLocaleString("en-KE");
+const K=n=>"KES "+N(n);
+const K2=n=>"KES "+Math.abs(n).toLocaleString("en-KE",{minimumFractionDigits:2,maximumFractionDigits:2});
+const P=n=>(n>=0?"+":"")+n.toFixed(2)+"%";
+const CG=n=>n>=0?"pos":"neg";
+const sc=s=>SC[s]||"#aaa";
+
+
+/* ════════ SACCO DATA — SASRA / AGM Reports · 2025/2026 ══════════
+   div = dividend on share capital (%)
+   dep = interest on deposits/BOSA (%)
+   WHT: SACCO dividends 5% | deposit interest 15%
+══════════════════════════════════════════════════════ */
+const SACCO_PROVIDERS=[
+  {id:"",        label:"— Select SACCO —",              div:0,    dep:0,    assets:"",     membership:"",    min:0},
+  {id:"stima",   label:"Stima SACCO",                   div:16.0, dep:11.0, assets:"KSh 75B",  membership:"Open", min:25000},
+  {id:"police",  label:"Kenya Police DT SACCO",         div:17.0, dep:11.0, assets:"KSh 66.4B",membership:"Open", min:20000},
+  {id:"mwalimu", label:"Mwalimu National SACCO",        div:13.0, dep:10.05,assets:"KSh 76.3B",membership:"Teachers",min:0},
+  {id:"harambee",label:"Harambee SACCO",                div:15.0, dep:9.1,  assets:"KSh 41.3B",membership:"Open", min:0},
+  {id:"hazina",  label:"Hazina DT SACCO",               div:17.0, dep:10.75,assets:"N/A",      membership:"Civil Servants",min:0},
+  {id:"tower",   label:"Tower DT SACCO",                div:16.0, dep:10.5, assets:"KSh 28B",  membership:"Open", min:5000},
+  {id:"bandari", label:"Bandari SACCO",                 div:18.0, dep:12.0, assets:"N/A",      membership:"Ports/Open",min:0},
+  {id:"biashara",label:"Biashara DT SACCO",             div:18.0, dep:12.0, assets:"N/A",      membership:"Open", min:0},
+  {id:"yetu",    label:"Yetu DT SACCO",                 div:19.0, dep:13.0, assets:"N/A",      membership:"Open", min:0},
+  {id:"ports",   label:"Ports SACCO Society",           div:20.0, dep:12.5, assets:"N/A",      membership:"Ports/Open",min:0},
+  {id:"imarika", label:"Imarika DT SACCO",              div:14.0, dep:10.0, assets:"N/A",      membership:"Open", min:2000},
+  {id:"unaitas", label:"Unaitas SACCO",                 div:13.0, dep:9.5,  assets:"N/A",      membership:"Open", min:1000},
+  {id:"daima",   label:"Daima SACCO",                   div:15.0, dep:10.0, assets:"N/A",      membership:"Open", min:0},
+  {id:"custom",  label:"Other / Custom SACCO",          div:0,    dep:0,    assets:"",         membership:"",    min:0},
+];
+
+
+/* ════════ MANSA-X SPECIAL FUNDS — Standard Investment Bank ══════
+   CMA-regulated · AUM $1B+ (KSh 129B) as at Feb 2026
+   Returns: 2025 net of fees (variable — not guaranteed)
+   Managed by: Standard Investment Bank (SIB)
+   Custody: I&M Bank · Invests: NYSE, LSE, FRA, HKG
+══════════════════════════════════════════════════════ */
+const MANSAX_FUNDS=[
+  {id:"mxkes",     label:"Mansa-X Special Fund — KES",
+   currency:"KES", shariah:false,
+   ret2025:20.74,  ret5yr:17.5,  hurdle:25, perfFee:10,
+   minInv:250000,  topUp:100000, aum:"KSh 87.2B",
+   mktShare:"63.3%", launched:"Jan 2019",
+   desc:"Multi-asset global fund (conventional). Invests in NYSE, LSE, FRA, HKG. Long/short strategy."},
+  {id:"mxusd",     label:"Mansa-X Special Fund — USD",
+   currency:"USD", shariah:false,
+   ret2025:13.37,  ret5yr:11.0,  hurdle:25, perfFee:10,
+   minInv:2500,    topUp:1000,   aum:"$1B+ combined",
+   mktShare:"—",   launched:"Jan 2019",
+   desc:"USD-denominated multi-asset global fund (conventional). Protects against KES depreciation."},
+  {id:"mxkesshariah",label:"Mansa-X Special Fund — KES (Shariah)",
+   currency:"KES", shariah:true,
+   ret2025:19.5,   ret5yr:16.8,  hurdle:25, perfFee:10,
+   minInv:250000,  topUp:100000, aum:"Part of KSh 129B",
+   mktShare:"—",   launched:"2019",
+   desc:"Shariah-compliant KES fund. Avoids interest-bearing instruments. Halal-certified investment strategy."},
+  {id:"mxusdshariah",label:"Mansa-X Special Fund — USD (Shariah)",
+   currency:"USD", shariah:true,
+   ret2025:12.5,   ret5yr:10.5,  hurdle:25, perfFee:10,
+   minInv:2500,    topUp:1000,   aum:"Part of $1B+",
+   mktShare:"—",   launched:"2019",
+   desc:"Shariah-compliant USD fund. Global halal investments in equities, sukuk and commodities."},
+];
+
+/* ════════ STORAGE ═══════════════════════════════════════ */
+function save(){try{localStorage.setItem("afv_v8",JSON.stringify({ST,PX}))}catch(e){}}
+function load(){
+  try{const d=localStorage.getItem("afv_v8");
+    if(d){const p=JSON.parse(d);ST=p.ST||{eq:[],fi:[],mf:[],wl:[]};
+      if(!ST.wl)ST.wl=[];if(!ST.sc)ST.sc=[];if(!ST.mx)ST.mx=[];
+      if(p.PX)Object.keys(p.PX).forEach(k=>{if(PX[k]){PX[k].p=p.PX[k].p;PX[k].dps=p.PX[k].dps;}});}}
+  catch(e){}
+}
+
+/* ════════ TOAST ═════════════════════════════════════════ */
+function toast(msg,ms=3500){
+  const t=document.getElementById("toast");t.textContent=msg;t.style.display="block";
+  clearTimeout(t._t);t._t=setTimeout(()=>{t.style.display="none"},ms);
+}
+
+/* ════════ LIVE REFRESH from Mansa Markets ═══════════════ */
+async function doRefresh(){
+  const btn=document.getElementById("btn-refresh");
+  const dot=document.getElementById("rfsh-dot");
+  const txt=document.getElementById("rfsh-txt");
+  btn.innerHTML='<span class="spin">\u21bb</span> Fetching...';
+  btn.disabled=true;
+  dot.className="rfsh-dot stale";
+  txt.textContent="Connecting...";
+
+  const TV="https://www.tradingview.com/markets/stocks-kenya/market-movers-all-stocks/";
+
+  /* Three CORS proxies — tried in order until one works */
+  const PROXIES=[
+    {wrap:u=>`https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+     parse:async r=>{const j=await r.json();return j.contents||"";}},
+    {wrap:u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
+     parse:async r=>r.text()},
+    {wrap:u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+     parse:async r=>r.text()},
+  ];
+
+  /* Parse TradingView markdown table
+     Row format: [TICKER](url "TICKER - Name")[Name](url) | PRICE KES | \u22120.69% | ... */
+  function parseTv(raw){
+    const out={};
+    // Primary pattern — matches ticker from NSEKE URL
+    const rx=/\[([A-Z]{2,6})\]\(https:\/\/www\.tradingview\.com\/symbols\/NSEKE-[A-Z0-9]+\/[^)]*\)[^\|]*\|\s*([\d,]+\.?\d*)\s*KES\s*\|\s*([\u2212+\-][\d,.]+)%/g;
+    let m;
+    while((m=rx.exec(raw))!==null){
+      const t=m[1];
+      if(out[t])continue; // skip duplicate rows
+      const p=parseFloat(m[2].replace(/,/g,""));
+      const c=parseFloat(m[3].replace(/\u2212/g,"-"));
+      if(!isNaN(p)&&p>0)out[t]={p,c};
+    }
+    // Fallback pattern — simpler match for price
+    if(Object.keys(out).length<5){
+      const rx2=/NSEKE-([A-Z]{2,6})\b[^|]*\|\s*([\d.]+)\s*KES\s*\|\s*([\u2212+\-][\d.]+)%/g;
+      while((m=rx2.exec(raw))!==null){
+        const t=m[1];
+        if(out[t])continue;
+        const p=parseFloat(m[2]);
+        const c=parseFloat(m[3].replace(/\u2212/g,"-"));
+        if(!isNaN(p)&&p>0)out[t]={p,c};
+      }
+    }
+    return out;
+  }
+
+  let prices={},proxyName="",succeeded=false;
+
+  for(const proxy of PROXIES){
+    const name=proxy.wrap("x").split("?")[0].replace("https://","").split("/")[0];
+    txt.textContent=`Trying ${name}...`;
+    try{
+      const resp=await fetch(proxy.wrap(TV),{signal:AbortSignal.timeout(13000)});
+      if(!resp.ok){console.warn(name,"HTTP",resp.status);continue;}
+      const raw=await proxy.parse(resp);
+      if(!raw||raw.length<1000){console.warn(name,"empty");continue;}
+      prices=parseTv(raw);
+      if(Object.keys(prices).length>5){proxyName=name;succeeded=true;break;}
+      console.warn(name,"parsed only",Object.keys(prices).length,"tickers");
+    }catch(e){console.warn(name,"error:",e.message);}
+  }
+
+  if(!succeeded){
+    dot.className="rfsh-dot err";
+    txt.textContent="All sources failed \u00b7 showing cached prices";
+    btn.innerHTML="\u21bb Refresh from TradingView";
+    btn.disabled=false;
+    toast("Could not refresh \u00b7 TradingView unavailable \u00b7 Prices shown are last cached values");
+    return;
+  }
+
+  /* Apply prices */
+  let updated=0;
+  Object.entries(prices).forEach(([t,{p,c}])=>{
+    if(PX[t]){
+      if(Math.abs(PX[t].p-p)>0.001)updated++;
+      PX[t].p=p; PX[t].chg=c;
+    }
+  });
+
+  /* Timestamp in EAT */
+  const eat=new Date(Date.now()+3*3600000);
+  const pad=n=>String(n).padStart(2,"0");
+  const ts=`${eat.getUTCDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][eat.getUTCMonth()]} ${eat.getUTCFullYear()} \u00b7 ${pad(eat.getUTCHours())}:${pad(eat.getUTCMinutes())} EAT`;
+
+  document.getElementById("rfsh-ts").textContent=`Last: TradingView \u00b7 ${ts}`;
+  dot.className="rfsh-dot";
+  txt.textContent=`Live \u00b7 ${Object.keys(prices).length} stocks \u00b7 ${updated} updated`;
+
+  const nbEl=document.getElementById("eq-nb");
+  if(nbEl)nbEl.textContent=`TradingView (NSEKE) \u00b7 ${ts} \u00b7 ${Object.keys(prices).length} stocks \u00b7 Click \u21bb to refresh`;
+  const pxTs=document.getElementById("px-ts");
+  if(pxTs)pxTs.textContent=`TradingView (NSEKE) \u00b7 ${ts} \u00b7 Nairobi Securities Exchange`;
+
+  save();renderAll();
+  if(document.getElementById("px")?.classList.contains("active"))pxTable();
+  btn.innerHTML="\u21bb Refresh from TradingView";
+  btn.disabled=false;
+  toast(`\u2713 ${Object.keys(prices).length} prices refreshed \u00b7 ${updated} changed \u00b7 ${ts}`);
+}
+
+
+
+
+
+function resetPx(){
+  Object.keys(BASE).forEach(k=>{PX[k].p=BASE[k].p;PX[k].dps=BASE[k].dps;PX[k].chg=BASE[k].chg;});
+  document.getElementById("rfsh-ts").textContent="Base prices: TradingView · 15 May 2026";
+  document.getElementById("rfsh-dot").className="rfsh-dot stale";
+  document.getElementById("rfsh-txt").textContent="Showing base prices · click Refresh for live";
+  save();renderAll();if(typeof pxTable==="function")pxTable();
+  toast("Prices reset to TradingView base (15 May 2026) · Click ↻ Refresh for live prices");
+}
+
+
+
+/* ════════ METRICS ═══════════════════════════════════════ */
+function metrics(){
+  let ev=0,ec=0,di=0;
+  ST.eq.forEach(h=>{const s=PX[h.t];if(!s)return;ev+=s.p*h.n;ec+=h.bp*h.n;di+=s.dps*h.n;});
+  let fp=0,fn2=0;
+  ST.fi.forEach(f=>{fp+=f.p;fn2+=f.p*f.r/100*(1-(FWT[f.t]||0));});
+  let mb=0,mn2=0;
+  ST.mf.forEach(m=>{mb+=m.b;mn2+=m.b*(m.r/100)*.85;});
+  let sctot=0,scInc=0;
+  (ST.sc||[]).forEach(s=>{sctot+=s.shares+s.deps;scInc+=s.shares*s.divRate/100+s.deps*s.depRate/100;});
+  let mxtot=0,mxInc=0;
+  (ST.mx||[]).forEach(m=>{const f=MANSAX_FUNDS.find(x=>x.id===m.fundId)||{hurdle:25};const g=m.amt*m.ret/100;const pf=m.ret>f.hurdle?g*0.1:0;mxtot+=m.amt;mxInc+=g-pf;});
+
+  const tot=ev+fp+mb+sctot+mxtot;
+  const gl=ev-ec,glp=ec>0?(gl/ec)*100:0;
+  const inc=di+fn2+mn2+scInc+mxInc,yld=tot>0?(inc/tot)*100:0;
+
+  // 1. Total Portfolio
+  document.getElementById("m-tot").textContent=K(tot);
+  document.getElementById("m-tot-s").textContent="Cost basis: "+K(ec+fp+mb+sctot+mxtot);
+
+  // 2. Unrealised P&L (equities only)
+  const ge=document.getElementById("m-gl");
+  ge.textContent=(gl>=0?"+":"-")+"KES "+N(Math.abs(gl));
+  ge.className="mc-val "+(gl>=0?"pos":"neg");
+  const gp=document.getElementById("m-glp");
+  gp.textContent=P(glp)+" return on equities";
+  gp.className="mc-sub "+(gl>=0?"pos":"neg");
+
+  const glRule=document.getElementById("mc-gl-rule");
+  if(glRule)glRule.style.background=gl>=0?"linear-gradient(90deg,var(--green),transparent)":"linear-gradient(90deg,var(--red),transparent)";
+  const glOrb=document.getElementById("mc-gl-orb");
+  if(glOrb)glOrb.style.background=gl>=0?"radial-gradient(circle,rgba(0,200,150,.15),transparent 65%)":"radial-gradient(circle,rgba(200,34,46,.14),transparent 65%)";
+  const glEl=document.getElementById("m-gl");
+  if(glEl)glEl.style.color=gl>=0?"var(--green2)":"#ff6b6b";
+
+  // 3. Annual Income (all sources)
+  document.getElementById("m-inc").textContent=K(inc);
+  document.getElementById("m-yld").textContent=yld.toFixed(2)+"% portfolio yield";
+
+  // 4. NSE Equities
+  const secs=[...new Set(ST.eq.map(h=>PX[h.t]?.s).filter(Boolean))];
+  document.getElementById("m-pos").textContent=ST.eq.length+" position"+(ST.eq.length!==1?"s":"");
+  document.getElementById("m-sec").textContent=ev>0?K(ev)+" value":"No holdings";
+
+  // 5. Fixed Income
+  document.getElementById("m-fi").textContent=K(fp);
+  document.getElementById("m-fi-s").textContent=K(fn2)+" net/yr"+(fp>0?" · "+(fn2/fp*100).toFixed(1)+"% yield":"");
+
+  // 6. MMF
+  document.getElementById("m-mmf").textContent=K(mb);
+  document.getElementById("m-mmf-s").textContent=K(mn2)+" net/yr"+(mb>0?" · "+(mn2/mb*100).toFixed(1)+"% net":"");
+
+  // 7. SACCO
+  document.getElementById("m-sc").textContent=K(sctot);
+  document.getElementById("m-sc-s").textContent=K(scInc)+" income/yr"+(sctot>0?" · "+(scInc/sctot*100).toFixed(1)+"% blended":"");
+
+  // 8. Special Funds (Mansa-X)
+  document.getElementById("m-mx").textContent=K(mxtot);
+  document.getElementById("m-mx-s").textContent=K(mxInc)+" projected/yr"+(mxtot>0?" · "+(mxInc/mxtot*100).toFixed(1)+"% net":"");
+}
+
+/* ════════ ALLOC CHART ═══════════════════════════════════ */
+function allocRender(){
+  let ev=0,fp=0,mb=0,sctot=0,mxtot=0;
+  ST.eq.forEach(h=>{const s=PX[h.t];if(s)ev+=s.p*h.n;});
+  ST.fi.forEach(f=>fp+=f.p);
+  ST.mf.forEach(m=>mb+=m.b);
+  (ST.sc||[]).forEach(s=>sctot+=s.shares+s.deps);
+  (ST.mx||[]).forEach(m=>mxtot+=m.amt);
+  const tot=ev+fp+mb+sctot+mxtot;
+  document.getElementById("ccv").textContent=tot>0?K(tot):"—";
+  document.getElementById("alloc-total").textContent=tot>0?("Total: "+K(tot)):"Add positions to see";
+  const lg=document.getElementById("aleg");
+  if(!tot){lg.innerHTML='<div style="text-align:center;color:var(--muted);font-size:12px;padding:8px">Add positions to see</div>';if(allocC){allocC.destroy();allocC=null;}return;}
+  if(allocC)allocC.destroy();
+  const lb=["NSE Equities","Fixed Income","MMF","SACCO","Special Funds"];
+  const vs=[ev,fp,mb,sctot,mxtot];
+  const cs=["#c8222e","#c47b0a","#0a6e5e","#f5a623","#6a0dad"];
+  // Filter out zero values for cleaner chart
+  const filtered=lb.map((l,i)=>({l,v:vs[i],c:cs[i]})).filter(x=>x.v>0);
+  allocC=new Chart(document.getElementById("ac"),{
+    type:"doughnut",
+    data:{
+      labels:filtered.map(x=>x.l),
+      datasets:[{data:filtered.map(x=>x.v),backgroundColor:filtered.map(x=>x.c),borderWidth:0,hoverOffset:6,borderRadius:4}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},cutout:"74%",
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>" "+K(c.raw)+" ("+(c.raw/tot*100).toFixed(1)+"%)"}}}}
+  });
+  lg.innerHTML=filtered.map(x=>`<div class="li"><div class="ld" style="background:${x.c}"></div><span class="ln">${x.l}</span><span class="lp">${(x.v/tot*100).toFixed(0)}%</span><span class="lv">${K(x.v)}</span></div>`).join("");
+}
+
+/* ════════ SECTOR BARS ═══════════════════════════════════ */
+function sectorBars(){
+  const el=document.getElementById("sbars");
+  if(!ST.eq.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No equity positions</div>';return;}
+  const bySec={};let tot=0;
+  ST.eq.forEach(h=>{const s=PX[h.t];if(!s)return;const v=s.p*h.n;tot+=v;bySec[s.s]=(bySec[s.s]||0)+v;});
+  const sorted=Object.entries(bySec).sort((a,b)=>b[1]-a[1]);
+  const max=sorted[0]?.[1]||1;
+  el.innerHTML=sorted.map(([sec,v])=>`<div class="br"><div class="bn" title="${sec}">${sec}</div><div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(0)}%;background:${sc(sec)}"></div></div><div class="bv">${(v/tot*100).toFixed(0)}%</div></div>`).join("");
+}
+
+/* ════════ TOP HOLDINGS ══════════════════════════════════ */
+function topHoldings(){
+  const el=document.getElementById("tholds");
+  if(!ST.eq.length){el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No positions</div>';return;}
+  let tot=0;
+  const vals=ST.eq.map(h=>{const s=PX[h.t];if(!s)return null;const v=s.p*h.n;tot+=v;return{t:h.t,v};}).filter(Boolean).sort((a,b)=>b.v-a.v).slice(0,7);
+  const max=vals[0]?.v||1;
+  el.innerHTML=vals.map(({t,v})=>`<div class="br"><div class="bn" style="color:var(--navy);font-weight:700;font-family:var(--fm)">${t}</div><div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(0)}%;background:linear-gradient(90deg,var(--red),var(--gold2))"></div></div><div class="bv">${(v/tot*100).toFixed(0)}%</div></div>`).join("");
+}
+
+/* ════════ DIVIDEND CALENDAR ═════════════════════════════ */
+function divCalendar(){
+  const el=document.getElementById("dcal");
+  const heldTickers=new Set(ST.eq.map(h=>h.t));
+  const today=new Date("2026-05-15");
+  const upcoming=DIV_EVENTS.filter(d=>heldTickers.has(d.t)&&new Date(d.exDate)>=today).sort((a,b)=>new Date(a.exDate)-new Date(b.exDate)).slice(0,6);
+  if(!upcoming.length){
+    el.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:16px">Add dividend-paying stocks to see calendar</div>';return;
+  }
+  el.innerHTML=upcoming.map(d=>{
+    const h=ST.eq.find(x=>x.t===d.t);
+    const income=h?h.n*d.dps:0;
+    const dt=new Date(d.exDate);
+    const day=dt.getDate();
+    const mon=dt.toLocaleDateString("en-GB",{month:"short"});
+    return `<div class="dcal-item">
+      <div class="dcal-date"><div class="dcal-day">${day}</div><div class="dcal-mon">${mon}</div></div>
+      <div class="dcal-info"><div class="dcal-t">${d.t} · ${d.type} Dividend</div><div class="dcal-n">Ex-date · Pay: ${new Date(d.payDate).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</div></div>
+      <div><div class="dcal-amt">KES ${d.dps.toFixed(2)}/sh</div>${income>0?`<div style="font-size:10px;color:var(--muted)">Total: ${K(income)}</div>`:""}</div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════ EQUITY TABLE ══════════════════════════════════ */
+function getEq(){
+  let items=ST.eq.map((h,i)=>{
+    const s=PX[h.t];if(!s)return null;
+    const v=s.p*h.n,c=h.bp*h.n,gl=v-c,glp=c>0?(gl/c)*100:0,d=s.dps*h.n,dy=s.p>0?(s.dps/s.p)*100:0;
+    const upside=h.tp>0?((h.tp-s.p)/s.p)*100:null;
+    return{h,i,s,v,c,gl,glp,d,dy,upside};
+  }).filter(Boolean);
+  if(fSec)items=items.filter(x=>x.s.s===fSec);
+  if(srch){const q=srch.toLowerCase();items=items.filter(x=>x.h.t.toLowerCase().includes(q)||x.s.n.toLowerCase().includes(q)||x.s.s.toLowerCase().includes(q));}
+  if(sCol){
+    const km={name:"name",sector:"sector",shares:"shares",price:"price",value:"v",pl:"gl",plp:"glp",div:"d",yield:"dy",target:"upside"};
+    items.sort((a,b)=>{
+      let av,bv;
+      switch(sCol){
+        case"name":av=a.h.t;bv=b.h.t;break;
+        case"sector":av=a.s.s;bv=b.s.s;break;
+        case"shares":av=a.h.n;bv=b.h.n;break;
+        case"price":av=a.s.p;bv=b.s.p;break;
+        case"value":av=a.v;bv=b.v;break;
+        case"pl":av=a.gl;bv=b.gl;break;
+        case"plp":av=a.glp;bv=b.glp;break;
+        case"div":av=a.d;bv=b.d;break;
+        case"yield":av=a.dy;bv=b.dy;break;
+        case"target":av=a.upside??-999;bv=b.upside??-999;break;
+        default:av=0;bv=0;
+      }
+      if(av===null||av===undefined)av=-999;
+      if(bv===null||bv===undefined)bv=-999;
+      return typeof av==="string"?av.localeCompare(bv)*sDir:(av-bv)*sDir;
+    });
+  }
+  return items;
+}
+
+function srow(h,i,s,v,c,gl,glp,d,dy,upside){
+  const bg=sc(s.s);const cc=s.chg>=0?"var(--green)":"var(--red)";
+  const plc=gl>0?"plp":gl<0?"pln":"plz";
+  const tgt=h.tp>0?`<span style="font-family:var(--fm);font-size:11px;color:${upside>0?"var(--green)":"var(--red)"}">${upside>0?"▲":"▼"}${Math.abs(upside).toFixed(0)}%</span>`:"<span style='color:var(--dim);font-size:11px'>—</span>";
+  const noteIcon=h.note?`<span title="${h.note}" style="color:var(--muted);cursor:help;margin-left:4px">📌</span>`:"";
+  return `<tr>
+    <td><div class="stk">
+      <div class="sico" style="background:${bg}18;color:${bg}">${h.t.slice(0,4)}</div>
+      <div><div class="sticker">${h.t}${noteIcon}</div><div class="sname">${s.n}</div></div>
+    </div></td>
+    <td><span class="pill s-${s.s}">${s.s}</span><div style="font-size:10px;margin-top:2px;color:${cc};font-family:var(--fm);font-weight:600">${s.chg>=0?"+":""}${s.chg.toFixed(2)}%</div></td>
+    <td class="r">${N(h.n)}</td>
+    <td class="r"><div style="font-weight:600">${s.p.toFixed(2)}</div></td>
+    <td class="r"><div style="font-weight:600">${N(v)}</div><div style="font-size:10px;color:var(--muted)">Cost ${N(c)}</div></td>
+    <td class="r"><span class="plb ${plc}">${gl>=0?"+":""}${N(gl)}</span></td>
+    <td class="r ${CG(glp)}" style="font-weight:600">${P(glp)}</td>
+    <td class="r" style="color:var(--gold)"><div>${N(d)}</div><div style="font-size:10px;color:var(--muted)">${dy.toFixed(1)}% yield</div></td>
+    <td class="r" style="color:var(--muted)">${dy.toFixed(1)}%</td>
+    <td class="r">${tgt}</td>
+    <td><button class="db" onclick="dEq(${i})" title="Remove">✕</button></td>
+  </tr>`;
+}
+
+function eqTable(){
+  const b=document.getElementById("eb"),items=getEq();
+  if(!items.length){b.innerHTML=`<tr class="er"><td colspan="11">${ST.eq.length?"No stocks match current filter — try a different search":"No holdings yet — click ＋ Add Stock to begin tracking your portfolio"}</td></tr>`;return;}
+  let html="",tv=0,tc=0,tg=0,td2=0;
+  if(!sCol&&!fSec&&!srch){
+    const bySec={};items.forEach(x=>{if(!bySec[x.s.s])bySec[x.s.s]=[];bySec[x.s.s].push(x);});
+    SO.forEach(sec=>{
+      if(!bySec[sec])return;
+      html+=`<tr class="sgr"><td colspan="11" style="border-left:4px solid ${sc(sec)};padding-left:14px">${sec} — ${bySec[sec].length} position${bySec[sec].length>1?"s":""}</td></tr>`;
+      bySec[sec].forEach(({h,i,s,v,c,gl,glp,d,dy,upside})=>{tv+=v;tc+=c;tg+=gl;td2+=d;html+=srow(h,i,s,v,c,gl,glp,d,dy,upside);});
+    });
+  } else {items.forEach(({h,i,s,v,c,gl,glp,d,dy,upside})=>{tv+=v;tc+=c;tg+=gl;td2+=d;html+=srow(h,i,s,v,c,gl,glp,d,dy,upside);});}
+  const tgp=tc>0?(tg/tc)*100:0;
+  html+=`<tr class="tr-tot"><td colspan="4" style="text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Total Equities</td><td class="r" style="font-weight:700">${N(tv)}</td><td class="r"><span class="plb ${tg>=0?"plp":"pln"}">${tg>=0?"+":""}${N(tg)}</span></td><td class="r ${CG(tgp)}" style="font-weight:700">${P(tgp)}</td><td class="r" style="color:var(--gold);font-weight:700">${N(td2)}</td><td colspan="3"></td></tr>`;
+  b.innerHTML=html;
+}
+
+/* ════════ WATCHLIST ═════════════════════════════════════ */
+function wlRender(){
+  const el=document.getElementById("wlg");
+  document.getElementById("wl-badge").textContent=ST.wl.length;
+  if(!ST.wl.length){el.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">Your watchlist is empty — add stocks to track</div>';return;}
+  el.innerHTML=ST.wl.map((w,i)=>{
+    const s=PX[w.t];if(!s)return"";
+    const cc=s.chg>=0?"var(--green)":"var(--red)";
+    const vLow=w.al>0&&s.p<=w.al?`<div style="color:var(--green);font-size:10px;font-weight:700">🔔 AT BUY ALERT</div>`:"";
+    const vHigh=w.ah>0&&s.p>=w.ah?`<div style="color:var(--red);font-size:10px;font-weight:700">🔔 AT SELL ALERT</div>`:"";
+    return `<div class="wl-card">
+      <button class="db wl-del" onclick="dWl(${i})" title="Remove">✕</button>
+      <div class="wl-t">${w.t}</div><div class="wl-n">${s.n}</div>
+      <div class="wl-p">${s.p.toFixed(2)}</div>
+      <div class="wl-chg" style="color:${cc}">${s.chg>=0?"▲":"▼"} ${Math.abs(s.chg).toFixed(2)}% today</div>
+      ${vLow}${vHigh}
+      ${w.al||w.ah?`<div class="wl-alert">
+        ${w.al?`<div class="wl-al"><div class="wl-al-l">Buy below</div><div class="wl-al-v" style="color:var(--green)">KES ${w.al.toFixed(2)}</div></div>`:""}
+        ${w.ah?`<div class="wl-al"><div class="wl-al-l">Sell above</div><div class="wl-al-v" style="color:var(--red)">KES ${w.ah.toFixed(2)}</div></div>`:""}
+      </div>`:""}
+      ${w.note?`<div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)">${w.note}</div>`:""}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)">
+        <span class="pill s-${s.s}">${s.s}</span>
+        <span style="font-family:var(--fm);font-size:10px;color:var(--muted)">${s.dps>0?"DPS: KES "+s.dps.toFixed(2):"No dividend"}</span>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+/* ════════ FI TABLE ══════════════════════════════════════ */
+function fiTable(){
+  const b=document.getElementById("fb"),items=ST.fi.filter(f=>f.t===CFT);
+  const[ti,su]=FTT[CFT]||[CFT,""];
+  document.getElementById("fi-t").textContent=ti;document.getElementById("fi-s").textContent=su;
+  if(!items.length){b.innerHTML=`<tr class="er"><td colspan="8">No ${ti} added yet</td></tr>`;document.getElementById("fi-pills").innerHTML="";return;}
+  let tp=0,tg=0,tw=0,tn=0;
+  b.innerHTML=items.map(f=>{
+    const g=f.p*f.r/100,wr=FWT[f.t]||0,wa=g*wr,n=g-wa;
+    tp+=f.p;tg+=g;tw+=wa;tn+=n;
+    const mat=f.md?new Date(f.md).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Open";
+    const ri=ST.fi.indexOf(f);
+    return `<tr>
+      <td style="font-size:13px;font-weight:500">${f.n}</td>
+      <td class="r">${N(f.p)}</td>
+      <td class="r" style="color:var(--green);font-weight:600">${f.r.toFixed(2)}%</td>
+      <td class="r">${N(g)}</td>
+      <td class="r">${wr===0?'<span style="color:var(--green);font-size:10px;font-weight:700;background:rgba(10,110,94,.08);padding:2px 7px;border-radius:4px">EXEMPT</span>':`<span style="color:var(--red)">-${N(wa)}</span>`}</td>
+      <td class="r" style="color:var(--green);font-weight:600">${N(n)}</td>
+      <td class="r" style="color:var(--muted)">${mat}</td>
+      <td><button class="db" onclick="dFI(${ri})">✕</button></td>
+    </tr>`;
+  }).join("")+`<tr class="tr-tot"><td>Total</td><td class="r">${N(tp)}</td><td></td><td class="r">${N(tg)}</td><td class="r" style="color:var(--red)">${tw>0?"-"+N(tw):"Exempt"}</td><td class="r" style="color:var(--green);font-weight:600">${N(tn)}</td><td colspan="2"></td></tr>`;
+  document.getElementById("fi-pills").innerHTML=`<span class="ip"><div class="ipd" style="background:var(--gold2)"></div><div class="ipl">Principal</div><div class="ipv">${K(tp)}</div></span><span class="ip"><div class="ipd" style="background:var(--green)"></div><div class="ipl">Net Income / yr</div><div class="ipv">${K(tn)}</div></span><span class="ip"><div class="ipd" style="background:var(--red)"></div><div class="ipl">WHT / yr</div><div class="ipv">${K(tw)}</div></span><span class="ip"><div class="ipd" style="background:#4a9eff"></div><div class="ipl">Effective Yield</div><div class="ipv">${tp>0?(tn/tp*100).toFixed(2):"0.00"}%</div></span>`;
+}
+
+/* ════════ MMF ════════════════════════════════════════════ */
+function mfRender(){
+  const grid=document.getElementById("mfg2"),tbl=document.getElementById("mfb");
+  if(!ST.mf.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">No MMF accounts — click ＋ Add MMF</div>';tbl.innerHTML='<tr class="er"><td colspan="7">No MMF accounts yet</td></tr>';return;}
+  let tot=0,tn=0;
+  grid.innerHTML=ST.mf.map((m,i)=>{
+    const nr=m.r*.85,n=m.b*(nr/100);tot+=m.b;tn+=n;
+    return `<div class="mfc">
+      <div class="mfc-top"><div class="mfc-name">${m.n}</div><button class="db" onclick="dMF(${i})">✕</button></div>
+      <div class="mfc-rate">${nr.toFixed(2)}%</div>
+      <div class="mfc-sub">Net rate after 15% WHT · Gross ${m.r.toFixed(2)}%</div>
+      <div class="mfc-bottom">
+        <div><div class="mfc-bl">Balance</div><div class="mfc-bv">${K(m.b)}</div></div>
+        <div style="text-align:right"><div class="mfc-bl">Annual net</div><div class="mfc-bv" style="color:var(--green)">${K(n)}</div></div>
+      </div>
+      ${m.note?`<div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)">${m.note}</div>`:""}
+    </div>`;
+  }).join("");
+  tbl.innerHTML=ST.mf.map((m,i)=>{const nr=m.r*.85,n=m.b*(nr/100);return `<tr><td style="font-size:13px;font-weight:600">${m.n}</td><td class="r">${N(m.b)}</td><td class="r">${m.r.toFixed(2)}%</td><td class="r" style="color:var(--green);font-weight:600">${nr.toFixed(2)}%</td><td class="r" style="color:var(--green)">${N(n)}</td><td class="r" style="color:var(--muted)">${N(n/12)}/mo</td><td><button class="db" onclick="dMF(${i})">✕</button></td></tr>`;}).join("")+`<tr class="tr-tot"><td>Total</td><td class="r">${N(tot)}</td><td colspan="2"></td><td class="r" style="color:var(--green);font-weight:600">${N(tn)}</td><td class="r" style="color:var(--muted)">${N(tn/12)}/mo</td><td></td></tr>`;
+}
+
+/* ════════ PRICE TABLE ═══════════════════════════════════ */
+function pxTable(){
+  const b=document.getElementById("pxb"),q=pxSrch.toLowerCase();
+  const bySec={};Object.entries(PX).forEach(([t,s])=>{if(!bySec[s.s])bySec[s.s]=[];bySec[s.s].push([t,s]);});
+  let html="";
+  SO.forEach(sec=>{
+    if(!bySec[sec])return;
+    const rows=bySec[sec].filter(([t,s])=>!q||t.toLowerCase().includes(q)||s.n.toLowerCase().includes(q));
+    if(!rows.length)return;
+    html+=`<tr class="sgr"><td colspan="9" style="border-left:4px solid ${sc(sec)};padding-left:14px">${sec}</td></tr>`;
+    rows.forEach(([t,s])=>{
+      const dy=s.p>0?(s.dps/s.p*100):0;
+      const cc=s.chg>=0?"var(--green)":"var(--red)";
+      const yc=s.ytd.startsWith("-")?"var(--red)":s.ytd==="N/A"?"var(--muted)":"var(--green)";
+      html+=`<tr id="pxr-${t}">
+        <td style="font-family:var(--fm);font-size:13px;font-weight:700;color:var(--navy)">${t}</td>
+        <td style="font-size:12px;color:var(--muted)">${s.n}</td>
+        <td><span class="pill s-${s.s}">${s.s}</span></td>
+        <td class="r"><input class="pxi" id="pxi-${t}" type="number" value="${s.p}" step="0.05" style="width:90px" onchange="upPx('${t}','p',this.value)"></td>
+        <td class="r"><input class="pxi" type="number" value="${s.dps}" step="0.05" style="width:72px" onchange="upPx('${t}','dps',this.value)"></td>
+        <td class="r" style="color:var(--muted)">${dy.toFixed(1)}%</td>
+        <td style="text-align:center;font-family:var(--fm);font-size:12px;font-weight:600;color:${cc}">${s.chg>=0?"+":""}${s.chg.toFixed(2)}%</td>
+        <td style="text-align:center;font-size:12px;color:${yc}">${s.ytd}</td>
+        <td style="font-size:11px;color:var(--muted);text-align:right">${s.mc}</td>
+      </tr>`;
+    });
+  });
+  b.innerHTML=html||"<tr class='er'><td colspan='9'>No stocks match filter</td></tr>";
+}
+
+function refreshPxInputs(){
+  Object.keys(PX).forEach(t=>{
+    const inp=document.getElementById("pxi-"+t);
+    if(inp&&parseFloat(inp.value)!==PX[t].p){
+      inp.value=PX[t].p.toFixed(2);
+      inp.classList.add("upd-flash");
+      setTimeout(()=>inp.classList.remove("upd-flash"),500);
+    }
+  });
+}
+
+/* ════════ CRUD ══════════════════════════════════════════ */
+window.dEq=(i)=>{ST.eq.splice(i,1);save();renderAll();toast("Position removed");};
+window.dFI=(i)=>{ST.fi.splice(i,1);save();fiTable();allocRender();metrics();toast("Position removed");};
+window.dMF=(i)=>{ST.mf.splice(i,1);save();mfRender();allocRender();metrics();toast("MMF removed");};
+window.dWl=(i)=>{ST.wl.splice(i,1);save();wlRender();toast("Removed from watchlist");};
+window.upPx=(t,f,v)=>{
+  const n=parseFloat(v);if(isNaN(n)||n<0)return;
+  PX[t][f]=n;
+  document.getElementById("rfsh-txt").textContent="Custom prices";
+  save();metrics();allocRender();eqTable();sectorBars();topHoldings();wlRender();
+};
+
+/* ════════ DROPDOWNS ═════════════════════════════════════ */
+/* ════════ MMF PRESET PICKER ═════════════════════════════════ */
+function buildMmfPresets(){
+  const sel=document.getElementById("mmf-preset");
+  if(!sel)return;
+  sel.innerHTML="";
+  MMF_PROVIDERS.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p.id;
+    o.textContent=p.label+(p.rate>0?" — Gross "+p.rate.toFixed(2)+"%":"");
+    sel.appendChild(o);
+  });
+}
+
+function applyMmfPreset(){
+  const sel=document.getElementById("mmf-preset");
+  const preset=MMF_PROVIDERS.find(p=>p.id===sel.value);
+  if(!preset||!preset.id||preset.id==="custom"){
+    document.getElementById("mmf-preset-info").innerHTML=
+      '<div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--muted);width:100%">Enter provider name and rate manually below</div>';
+    if(preset?.id==="custom"){
+      document.getElementById("mn").value="";
+      document.getElementById("mr").value="";
+      document.getElementById("mmf-net-preview").textContent="";
+    }
+    return;
+  }
+  // Auto-fill name and rate
+  document.getElementById("mn").value=preset.label;
+  document.getElementById("mr").value=preset.rate.toFixed(2);
+  const netR=(preset.rate*0.85).toFixed(2);
+  document.getElementById("mmf-net-preview").textContent="Net after 15% WHT: "+netR+"%";
+  // Show info card
+  document.getElementById("mmf-preset-info").innerHTML=`
+    <div style="background:rgba(10,110,94,.06);border:1px solid rgba(10,110,94,.2);border-radius:var(--r3);padding:8px 12px;font-size:11px;width:100%">
+      <div style="font-weight:700;color:var(--navy);margin-bottom:2px">${preset.label}</div>
+      <div style="color:var(--muted)">Manager: ${preset.mgr}</div>
+      <div style="font-family:var(--fm);margin-top:4px">
+        <span style="color:var(--navy)">Gross: ${preset.rate.toFixed(2)}%</span>
+        &nbsp;·&nbsp;
+        <span style="color:var(--green)">Net after WHT: ${netR}%</span>
+        ${preset.min>0?`&nbsp;·&nbsp;<span style="color:var(--muted)">Min: KES ${preset.min.toLocaleString()}</span>`:""}
+      </div>
+    </div>`;
+}
+
+// Update net preview when rate is manually changed
+function updateMmfNetPreview(){
+  const r=parseFloat(document.getElementById("mr")?.value);
+  const el=document.getElementById("mmf-net-preview");
+  if(el&&!isNaN(r)&&r>0)el.textContent="Net after 15% WHT: "+(r*0.85).toFixed(2)+"%";
+  else if(el)el.textContent="";
+}
+
+function buildDropdown(id){
+  const sel=document.getElementById(id);sel.innerHTML="";
+  const gd={};Object.entries(PX).forEach(([t,s])=>{if(!gd[s.s])gd[s.s]=[];gd[s.s].push([t,s]);});
+  SO.forEach(sec=>{
+    if(!gd[sec])return;
+    const og=document.createElement("optgroup");og.label=sec;
+    gd[sec].forEach(([t,s])=>{const o=document.createElement("option");o.value=t;o.textContent=`${t} — ${s.n} (${s.p.toFixed(2)})`;og.appendChild(o);});
+    sel.appendChild(og);
+  });
+}
+buildDropdown("et");buildDropdown("wt");buildMmfPresets();buildSaccoPresets();buildMxPanel();
+
+/* ════════ FORM WIRING ═══════════════════════════════════ */
+document.getElementById("eo").onclick=()=>{const f=document.getElementById("ef");f.classList.toggle("open");const s=PX[document.getElementById("et").value];if(s)document.getElementById("ep").value=s.p.toFixed(2);};
+document.getElementById("et").onchange=()=>{const s=PX[document.getElementById("et").value];if(s)document.getElementById("ep").value=s.p.toFixed(2);};
+document.getElementById("ec").onclick=()=>document.getElementById("ef").classList.remove("open");
+document.getElementById("esv").onclick=()=>{
+  const t=document.getElementById("et").value,n=parseFloat(document.getElementById("es").value),bp=parseFloat(document.getElementById("ep").value);
+  const tp=parseFloat(document.getElementById("etp").value)||0;const note=document.getElementById("en").value.trim();
+  if(!t||isNaN(n)||n<=0||isNaN(bp)||bp<=0){toast("Please fill stock, shares and buy price");return;}
+  ST.eq.push({t,n,bp,tp,note});save();renderAll();
+  document.getElementById("ef").classList.remove("open");
+  ["es","etp","en"].forEach(id=>document.getElementById(id).value="");
+  toast(`Added ${n.toLocaleString()} × ${t} @ KES ${bp.toFixed(2)}`);
+};
+
+document.getElementById("wo").onclick=()=>document.getElementById("wf").classList.toggle("open");
+document.getElementById("wc").onclick=()=>document.getElementById("wf").classList.remove("open");
+document.getElementById("wsv").onclick=()=>{
+  const t=document.getElementById("wt").value,al=parseFloat(document.getElementById("wal").value)||0,ah=parseFloat(document.getElementById("wah").value)||0,note=document.getElementById("wn").value.trim();
+  if(!t){toast("Select a stock");return;}
+  if(ST.wl.some(w=>w.t===t)){toast(`${t} is already on your watchlist`);return;}
+  ST.wl.push({t,al,ah,note});save();wlRender();
+  document.getElementById("wf").classList.remove("open");
+  ["wal","wah","wn"].forEach(id=>document.getElementById(id).value="");
+  toast(`Added ${t} to watchlist`);
+};
+
+document.getElementById("fo").onclick=()=>document.getElementById("ff").classList.toggle("open");
+document.getElementById("fc").onclick=()=>document.getElementById("ff").classList.remove("open");
+document.getElementById("fsv").onclick=()=>{
+  const n=document.getElementById("fn").value.trim(),p=parseFloat(document.getElementById("fp").value),r=parseFloat(document.getElementById("fr").value),md=document.getElementById("fmd").value;
+  if(!n||isNaN(p)||p<=0||isNaN(r)||r<=0){toast("Fill description, principal and rate");return;}
+  ST.fi.push({t:CFT,n,p,r,md});save();fiTable();allocRender();metrics();
+  document.getElementById("ff").classList.remove("open");
+  ["fn","fp","fr","fmd"].forEach(id=>document.getElementById(id).value="");
+  toast(`Added: ${n}`);
+};
+
+document.getElementById("mfo").onclick=()=>document.getElementById("mff").classList.toggle("open");
+document.getElementById("mfc").onclick=()=>document.getElementById("mff").classList.remove("open");
+document.getElementById("mfs").onclick=()=>{
+  const n=document.getElementById("mn").value.trim(),b=parseFloat(document.getElementById("mb").value),r=parseFloat(document.getElementById("mr").value),note=document.getElementById("mno").value.trim();
+  if(!n||isNaN(b)||b<=0||isNaN(r)||r<=0){toast("Fill provider, balance and rate");return;}
+  ST.mf.push({n,b,r,note});save();mfRender();allocRender();metrics();
+  document.getElementById("mff").classList.remove("open");
+  ["mn","mb","mr","mno"].forEach(id=>document.getElementById(id).value="");
+  toast(`Added: ${n}`);
+};
+
+/* ════════ SORT + FILTER ═════════════════════════════════ */
+document.querySelectorAll("#eqt thead th[data-col]").forEach(th=>{
+  th.onclick=()=>{
+    const col=th.dataset.col;if(sCol===col){sDir*=-1;}else{sCol=col;sDir=-1;}
+    document.querySelectorAll("#eqt thead th").forEach(t=>{t.classList.remove("sorted");const a=t.querySelector(".sa");if(a)a.textContent="↕";});
+    th.classList.add("sorted");const a=th.querySelector(".sa");if(a)a.textContent=sDir===1?"↑":"↓";
+    eqTable();
+  };
+});
+document.getElementById("eq-q").oninput=e=>{srch=e.target.value;eqTable();};
+document.getElementById("sf-btns").onclick=e=>{
+  const b=e.target.closest(".sf");if(!b)return;
+  document.querySelectorAll(".sf").forEach(x=>x.classList.remove("on"));b.classList.add("on");fSec=b.dataset.s;eqTable();
+};
+document.getElementById("px-q").oninput=e=>{pxSrch=e.target.value;pxTable();};
+
+/* ════════ TABS ══════════════════════════════════════════ */
+document.querySelectorAll(".tabs .tab").forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll(".tabs .tab,.panel").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");document.getElementById(t.dataset.tab).classList.add("active");
+    if(t.dataset.tab==="px")pxTable();
+  };
+});
+document.querySelectorAll(".fit").forEach(t=>{
+  t.onclick=()=>{document.querySelectorAll(".fit").forEach(x=>x.classList.remove("active"));t.classList.add("active");CFT=t.dataset.fi;fiTable();};
+});
+
+/* ════════ EXPORT ════════════════════════════════════════ */
+function exportCSV(){
+  const rows=[["AFRIVEST PORTFOLIO TRACKER"],["Nairobi Securities Exchange · Kenya"],["Source: Mansa Markets · 15 May 2026 · TradingView (NSEKE)"],[""],
+    ["EQUITY HOLDINGS"],["Ticker","Name","Sector","Shares","Buy Price","Market Price","Market Value","Cost Basis","P&L","P&L %","DPS","Annual Dividend","Div Yield","Target Price"]];
+  ST.eq.forEach(h=>{const s=PX[h.t];if(!s)return;const v=s.p*h.n,c=h.bp*h.n,gl=v-c,glp=c>0?(gl/c)*100:0;rows.push([h.t,s.n,s.s,h.n,h.bp.toFixed(2),s.p.toFixed(2),v.toFixed(0),c.toFixed(0),gl.toFixed(0),(glp/100).toFixed(4),s.dps.toFixed(2),(s.dps*h.n).toFixed(0),(s.p>0?s.dps/s.p:0).toFixed(4),h.tp||""]);});
+  rows.push([""],["FIXED INCOME"],["Type","Description","Principal","Rate","Gross/yr","WHT","Net/yr","Maturity"]);
+  ST.fi.forEach(f=>{const g=f.p*f.r/100,w=(FWT[f.t]||0)*g;rows.push([f.t,f.n,f.p,f.r/100,g.toFixed(0),w.toFixed(0),(g-w).toFixed(0),f.md||""]);});
+  rows.push([""],["MONEY MARKET FUNDS"],["Provider","Balance","Gross Rate","Net Rate","Annual Net Income","Monthly Net"]);
+  ST.mf.forEach(m=>{const n=m.b*(m.r/100)*.85;rows.push([m.n,m.b,(m.r/100).toFixed(4),(m.r*.85/100).toFixed(4),n.toFixed(0),(n/12).toFixed(0)]);});
+  const a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,\uFEFF"+encodeURIComponent(rows.map(r=>r.map(v=>`"${v}"`).join(",")).join("\n"));
+  a.download="Afrivest_NSE_Portfolio_"+new Date().toISOString().slice(0,10)+".csv";a.click();
+  toast("Portfolio exported as CSV");
+}
+
+/* ════════ MMF QUICK-ADD ════════════════════════════════════ */
+function toggleMmfRates(){
+  const el=document.getElementById("mmf-rates-table");
+  const btn=document.getElementById("mmf-show-rates");
+  if(el.style.display==="none"){el.style.display="block";btn.textContent="✕ Hide Rates";}
+  else{el.style.display="none";btn.textContent="📊 Rate Table";}
+}
+
+function quickAddMmf(presetId){
+  const preset=MMF_PROVIDERS.find(p=>p.id===presetId);
+  if(!preset)return;
+  // Open the form and pre-fill
+  document.getElementById("mff").classList.add("open");
+  const sel=document.getElementById("mmf-preset");
+  if(sel)sel.value=presetId;
+  document.getElementById("mn").value=preset.label;
+  document.getElementById("mr").value=preset.rate.toFixed(2);
+  document.getElementById("mmf-net-preview").textContent="Net after 15% WHT: "+(preset.rate*0.85).toFixed(2)+"%";
+  document.getElementById("mb").value="";
+  document.getElementById("mb").focus();
+  applyMmfPreset();
+  // Scroll to the form
+  document.getElementById("mff").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+
+/* ════════ SACCO FUNCTIONS ═══════════════════════════════════════ */
+function buildSaccoPresets(){
+  const sel=document.getElementById("sc-preset");
+  if(!sel)return;
+  sel.innerHTML="";
+  SACCO_PROVIDERS.forEach(p=>{
+    const o=document.createElement("option");
+    o.value=p.id;
+    o.textContent=p.label+(p.div>0?" — Div "+p.div+"%  Dep "+p.dep+"%":"");
+    sel.appendChild(o);
+  });
+}
+
+function applySaccoPreset(){
+  const sel=document.getElementById("sc-preset");
+  const p=SACCO_PROVIDERS.find(x=>x.id===sel.value);
+  if(!p||!p.id||p.id==="custom"){
+    document.getElementById("sc-preset-info").innerHTML='<div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--muted);width:100%">Enter SACCO name and rates manually below</div>';
+    return;
+  }
+  document.getElementById("scn").value=p.label;
+  document.getElementById("scdr").value=p.div.toFixed(2);
+  document.getElementById("scir").value=p.dep.toFixed(2);
+  updateScPreview();
+  document.getElementById("sc-preset-info").innerHTML=`
+    <div style="background:rgba(10,110,94,.06);border:1px solid rgba(10,110,94,.2);border-radius:var(--r3);padding:8px 12px;font-size:11px;width:100%">
+      <div style="font-weight:700;color:var(--navy);margin-bottom:3px">${p.label}</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:3px">
+        <span style="font-family:var(--fm)">📊 Dividend: <strong style="color:var(--green)">${p.div}%</strong></span>
+        <span style="font-family:var(--fm)">💰 Dep Interest: <strong style="color:var(--green)">${p.dep}%</strong></span>
+        <span style="color:var(--muted)">Assets: ${p.assets||"N/A"}</span>
+        <span style="color:var(--muted)">Membership: ${p.membership||"Open"}</span>
+        ${p.min>0?`<span style="color:var(--muted)">Min shares: KES ${p.min.toLocaleString()}</span>`:""}
+      </div>
+    </div>`;
+}
+
+function updateScPreview(){
+  const shares=parseFloat(document.getElementById("scs")?.value)||0;
+  const deps=parseFloat(document.getElementById("scd")?.value)||0;
+  const dr=parseFloat(document.getElementById("scdr")?.value)||0;
+  const ir=parseFloat(document.getElementById("scir")?.value)||0;
+  const divInc=shares*dr/100;
+  const depInc=deps*ir/100;
+  const total=divInc+depInc;
+  if(dr>0)document.getElementById("sc-div-preview").textContent=shares>0?"Dividend: KES "+N(divInc)+"/yr":"Enter share capital above";
+  if(ir>0)document.getElementById("sc-dep-preview").textContent=deps>0?"Interest: KES "+N(depInc)+"/yr":"Enter deposits above";
+  if(total>0)document.getElementById("sc-total-preview").textContent="KES "+N(total)+"/yr total  (Div: "+K(divInc)+"  +  Dep: "+K(depInc)+")";
+  else document.getElementById("sc-total-preview").textContent="—";
+}
+
+function toggleScRates(){
+  const el=document.getElementById("sc-rates-table");
+  const btn=document.getElementById("sc-show-rates");
+  if(el.style.display==="none"){el.style.display="block";btn.textContent="✕ Hide Rates";}
+  else{el.style.display="none";btn.textContent="📊 Rate Table";}
+}
+
+function quickAddSacco(presetId){
+  const p=SACCO_PROVIDERS.find(x=>x.id===presetId);
+  if(!p)return;
+  document.getElementById("scf").classList.add("open");
+  document.getElementById("sc-preset").value=presetId;
+  applySaccoPreset();
+  document.getElementById("scs").value="";
+  document.getElementById("scd").value="";
+  document.getElementById("scs").focus();
+  document.getElementById("scf").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+window.dSacco=(i)=>{ST.sc.splice(i,1);save();renderSacco();metrics();toast("SACCO removed");};
+
+function renderSacco(){
+  const grid=document.getElementById("sc-grid");
+  const tbody=document.getElementById("sc-tbody");
+  const pills=document.getElementById("sc-pills");
+  if(!ST.sc||!ST.sc.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-size:14px;font-style:italic">No SACCO investments yet — click ＋ Add SACCO or use the Rate Table above</div>';
+    tbody.innerHTML='<tr class="er"><td colspan="9">No SACCO investments yet</td></tr>';
+    if(pills)pills.innerHTML="";
+    return;
+  }
+  let totShares=0,totDeps=0,totDivInc=0,totDepInc=0;
+
+  grid.innerHTML=ST.sc.map((s,i)=>{
+    const divInc=s.shares*s.divRate/100;
+    const depInc=s.deps*s.depRate/100;
+    const total=divInc+depInc;
+    const totalInvested=s.shares+s.deps;
+    const blendedYield=totalInvested>0?(total/totalInvested)*100:0;
+    totShares+=s.shares; totDeps+=s.deps; totDivInc+=divInc; totDepInc+=depInc;
+    return `<div class="mfc">
+      <div class="mfc-top">
+        <div class="mfc-name">${s.name}</div>
+        <button class="db" onclick="dSacco(${i})" title="Remove">✕</button>
+      </div>
+      <div style="display:flex;gap:12px;margin:8px 0">
+        <div style="flex:1;text-align:center;background:rgba(10,110,94,.06);border-radius:var(--r3);padding:7px 4px">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Div Rate</div>
+          <div style="font-family:var(--fm);font-size:18px;font-weight:500;color:var(--green)">${s.divRate.toFixed(1)}%</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(10,110,94,.06);border-radius:var(--r3);padding:7px 4px">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Dep Rate</div>
+          <div style="font-family:var(--fm);font-size:18px;font-weight:500;color:var(--green)">${s.depRate.toFixed(1)}%</div>
+        </div>
+        <div style="flex:1;text-align:center;background:rgba(196,123,10,.06);border-radius:var(--r3);padding:7px 4px">
+          <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">Blended</div>
+          <div style="font-family:var(--fm);font-size:18px;font-weight:500;color:var(--gold)">${blendedYield.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:6px;font-family:var(--fm)">Total Income: ${K(total)}/yr</div>
+      <div class="mfc-bottom">
+        <div><div class="mfc-bl">Share Capital</div><div class="mfc-bv">${K(s.shares)}</div></div>
+        <div style="text-align:right"><div class="mfc-bl">Deposits/BOSA</div><div class="mfc-bv">${K(s.deps)}</div></div>
+      </div>
+      ${s.note?`<div style="font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--b1)">${s.note}</div>`:""}
+    </div>`;
+  }).join("");
+
+  tbody.innerHTML=ST.sc.map((s,i)=>{
+    const dInc=s.shares*s.divRate/100;
+    const iInc=s.deps*s.depRate/100;
+    return `<tr>
+      <td style="font-size:13px;font-weight:600">${s.name}</td>
+      <td class="r">${N(s.shares)}</td>
+      <td class="r">${N(s.deps)}</td>
+      <td class="r" style="color:var(--green);font-weight:600">${s.divRate.toFixed(2)}%</td>
+      <td class="r" style="color:var(--green)">${N(dInc)}</td>
+      <td class="r" style="color:var(--green);font-weight:600">${s.depRate.toFixed(2)}%</td>
+      <td class="r" style="color:var(--green)">${N(iInc)}</td>
+      <td class="r" style="color:var(--gold);font-weight:700">${N(dInc+iInc)}</td>
+      <td><button class="db" onclick="dSacco(${i})" title="Remove">✕</button></td>
+    </tr>`;
+  }).join("")+`<tr class="tr-tot">
+    <td>Total</td>
+    <td class="r">${N(totShares)}</td>
+    <td class="r">${N(totDeps)}</td>
+    <td colspan="2" class="r" style="color:var(--green)">${N(totDivInc)}/yr dividends</td>
+    <td colspan="2" class="r" style="color:var(--green)">${N(totDepInc)}/yr interest</td>
+    <td class="r" style="color:var(--gold);font-weight:700">${N(totDivInc+totDepInc)}/yr</td>
+    <td></td>
+  </tr>`;
+
+  if(pills)pills.innerHTML=`
+    <span class="ip"><div class="ipd" style="background:var(--gold2)"></div><div class="ipl">Share Capital</div><div class="ipv">${K(totShares)}</div></span>
+    <span class="ip"><div class="ipd" style="background:#4a9eff"></div><div class="ipl">Deposits / BOSA</div><div class="ipv">${K(totDeps)}</div></span>
+    <span class="ip"><div class="ipd" style="background:var(--green)"></div><div class="ipl">Total Invested</div><div class="ipv">${K(totShares+totDeps)}</div></span>
+    <span class="ip"><div class="ipd" style="background:var(--gold)"></div><div class="ipl">Annual Income</div><div class="ipv">${K(totDivInc+totDepInc)}</div></span>`;
+}
+
+/* Wire SACCO form */
+document.getElementById("sco").onclick=()=>document.getElementById("scf").classList.toggle("open");
+document.getElementById("scc").onclick=()=>document.getElementById("scf").classList.remove("open");
+["scs","scd","scdr","scir"].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.oninput=updateScPreview;
+});
+document.getElementById("scsv").onclick=()=>{
+  const name=document.getElementById("scn").value.trim();
+  const shares=parseFloat(document.getElementById("scs").value)||0;
+  const deps=parseFloat(document.getElementById("scd").value)||0;
+  const divRate=parseFloat(document.getElementById("scdr").value)||0;
+  const depRate=parseFloat(document.getElementById("scir").value)||0;
+  const note=document.getElementById("scno").value.trim();
+  if(!name){toast("Please enter a SACCO name");return;}
+  if(shares<=0&&deps<=0){toast("Enter share capital or deposits amount");return;}
+  if(divRate<=0&&depRate<=0){toast("Enter at least one rate (dividend or deposit)");return;}
+  ST.sc.push({name,shares,deps,divRate,depRate,note});
+  save();renderSacco();metrics();
+  document.getElementById("scf").classList.remove("open");
+  ["scn","scs","scd","scdr","scir","scno"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("sc-preset").value="";
+  document.getElementById("sc-preset-info").innerHTML='<div style="background:var(--s3);border:1px solid var(--b1);border-radius:var(--r3);padding:8px 12px;font-size:12px;color:var(--muted);width:100%">Select a SACCO above to auto-fill rates</div>';
+  document.getElementById("sc-total-preview").textContent="—";
+  toast("SACCO investment added: "+name);
+};
+
+
+
+/* ════════ MANSA-X SPECIAL FUNDS FUNCTIONS ══════════════════════ */
+function buildMxPanel(){
+  // Populate fund cards (always visible)
+  const grid=document.getElementById("mx-fund-cards");
+  if(!grid)return;
+  const colors={mxkes:"#c8222e",mxusd:"#0a6e5e",mxkesshariah:"#c47b0a",mxusdshariah:"#6a0dad"};
+  grid.innerHTML=MANSAX_FUNDS.map(f=>`
+    <div style="background:var(--card);border:1px solid var(--b1);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)">
+      <div style="background:${colors[f.id]};padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div style="font-family:var(--fd);font-size:14px;font-weight:800;color:#fff">${f.label}</div>
+        ${f.shariah?'<span style="background:rgba(255,255,255,.2);color:#fff;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.06em">SHARIAH</span>':""}
+      </div>
+      <div style="padding:14px 16px">
+        <div style="display:flex;gap:10px;margin-bottom:10px">
+          <div style="flex:1;text-align:center;background:var(--s2);border-radius:var(--r3);padding:8px 4px">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">2025 Return</div>
+            <div style="font-family:var(--fm);font-size:20px;font-weight:700;color:${colors[f.id]}">${f.ret2025.toFixed(2)}%</div>
+          </div>
+          <div style="flex:1;text-align:center;background:var(--s2);border-radius:var(--r3);padding:8px 4px">
+            <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px">5yr Avg</div>
+            <div style="font-family:var(--fm);font-size:20px;font-weight:700;color:var(--muted)">${f.ret5yr.toFixed(1)}%</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.4">${f.desc}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+          <span style="font-size:10px;background:var(--s3);padding:2px 8px;border-radius:20px;color:var(--muted)">Min: ${f.currency} ${f.minInv.toLocaleString()}</span>
+          <span style="font-size:10px;background:var(--s3);padding:2px 8px;border-radius:20px;color:var(--muted)">AUM: ${f.aum}</span>
+          <span style="font-size:10px;background:var(--s3);padding:2px 8px;border-radius:20px;color:var(--muted)">Since ${f.launched}</span>
+        </div>
+        <button class="btn btn-red btn-sm" style="width:100%" onclick="quickAddMx('${f.id}')">＋ Add ${f.currency} Investment</button>
+      </div>
+    </div>`).join("");
+
+  // Populate select dropdown
+  const sel=document.getElementById("mx-fund-sel");
+  if(!sel)return;
+  sel.innerHTML='<option value="">— Select fund —</option>';
+  MANSAX_FUNDS.forEach(f=>{
+    const o=document.createElement("option");
+    o.value=f.id;
+    o.textContent=f.label+" ("+f.ret2025.toFixed(2)+"% in 2025)";
+    sel.appendChild(o);
+  });
+}
+
+function applyMxPreset(){
+  const id=document.getElementById("mx-fund-sel").value;
+  const f=MANSAX_FUNDS.find(x=>x.id===id);
+  if(!f)return;
+  document.getElementById("mx-ret").value=f.ret2025.toFixed(2);
+  document.getElementById("mx-ret-hint").textContent="2025 actual: "+f.ret2025+"% · 5yr avg: "+f.ret5yr+"% · Adjust to your expectation";
+  updateMxPreview();
+}
+
+function updateMxPreview(){
+  const id=document.getElementById("mx-fund-sel").value;
+  const f=MANSAX_FUNDS.find(x=>x.id===id);
+  const amt=parseFloat(document.getElementById("mx-amt")?.value)||0;
+  const ret=parseFloat(document.getElementById("mx-ret")?.value)||0;
+  const el=document.getElementById("mx-preview");
+  if(!el)return;
+  if(!f||!amt||!ret){el.textContent="Select fund and enter amount to see projection";el.style.color="var(--muted)";return;}
+  const grossInc=amt*ret/100;
+  const projVal=amt+grossInc;
+  // Performance fee: 10% on returns above 25% hurdle
+  const perfFee=ret>f.hurdle?grossInc*0.1:0;
+  const netInc=grossInc-perfFee;
+  el.innerHTML=`
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">
+      <div><div style="color:var(--muted);font-size:10px;margin-bottom:2px">Amount Invested</div><div style="color:var(--navy);font-weight:600">${f.currency} ${N(amt)}</div></div>
+      <div><div style="color:var(--muted);font-size:10px;margin-bottom:2px">Gross Income (1yr)</div><div style="color:var(--green);font-weight:600">${f.currency} ${N(grossInc)}</div></div>
+      ${perfFee>0?`<div><div style="color:var(--muted);font-size:10px;margin-bottom:2px">Performance Fee (10%)</div><div style="color:var(--red);font-weight:600">-${f.currency} ${N(perfFee)}</div></div>`:""}
+      <div><div style="color:var(--muted);font-size:10px;margin-bottom:2px">Net Income (1yr)</div><div style="color:var(--green);font-weight:700">${f.currency} ${N(netInc)}</div></div>
+      <div><div style="color:var(--muted);font-size:10px;margin-bottom:2px">Projected Value</div><div style="color:var(--navy);font-weight:700">${f.currency} ${N(projVal)}</div></div>
+    </div>`;
+  el.style.color="var(--text)";
+}
+
+function quickAddMx(fundId){
+  const f=MANSAX_FUNDS.find(x=>x.id===fundId);
+  if(!f)return;
+  document.getElementById("mxf").classList.add("open");
+  document.getElementById("mx-fund-sel").value=fundId;
+  applyMxPreset();
+  document.getElementById("mx-amt").value="";
+  document.getElementById("mx-amt").focus();
+  document.getElementById("mxf").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+window.dMx=(i)=>{ST.mx.splice(i,1);save();renderMx();metrics();toast("Investment removed");};
+
+function renderMx(){
+  const tbody=document.getElementById("mx-tbody");
+  const pills=document.getElementById("mx-pills");
+  if(!ST.mx||!ST.mx.length){
+    if(tbody)tbody.innerHTML='<tr class="er"><td colspan="7">No Mansa-X investments yet — click ＋ Add Investment or choose a fund card above</td></tr>';
+    if(pills)pills.innerHTML="";
+    return;
+  }
+  let totInv=0,totInc=0;
+  tbody.innerHTML=ST.mx.map((m,i)=>{
+    const f=MANSAX_FUNDS.find(x=>x.id===m.fundId)||{currency:"KES",hurdle:25};
+    const grossInc=m.amt*m.ret/100;
+    const perfFee=m.ret>f.hurdle?grossInc*0.1:0;
+    const netInc=grossInc-perfFee;
+    const projVal=m.amt+netInc;
+    totInv+=m.amt; totInc+=netInc;
+    const colors={mxkes:"#c8222e",mxusd:"#0a6e5e",mxkesshariah:"#c47b0a",mxusdshariah:"#6a0dad"};
+    const col=colors[m.fundId]||"var(--navy)";
+    return `<tr>
+      <td><div style="font-weight:700;color:${col}">${m.name}</div>${m.note?`<div style="font-size:10px;color:var(--muted)">${m.note}</div>`:""}</td>
+      <td><span class="pill s-${f.currency==="USD"?"Telecom":"Banking"}">${f.currency}</span>${m.name.includes("Shariah")?'<span class="pill s-Agriculture" style="margin-left:4px">Shariah</span>':""}</td>
+      <td class="r" style="font-weight:600">${N(m.amt)}</td>
+      <td class="r" style="color:${col};font-weight:700">${m.ret.toFixed(2)}%</td>
+      <td class="r" style="color:var(--green)">${N(netInc)}</td>
+      <td class="r" style="font-weight:700">${N(projVal)}</td>
+      <td><button class="db" onclick="dMx(${i})">✕</button></td>
+    </tr>`;
+  }).join("")+`<tr class="tr-tot">
+    <td colspan="2">Total</td>
+    <td class="r" style="font-weight:700">${N(totInv)}</td>
+    <td></td>
+    <td class="r" style="color:var(--green);font-weight:700">${N(totInc)}/yr</td>
+    <td class="r" style="font-weight:700">${N(totInv+totInc)}</td>
+    <td></td>
+  </tr>`;
+
+  if(pills)pills.innerHTML=`
+    <span class="ip"><div class="ipd" style="background:var(--red)"></div><div class="ipl">Total Invested</div><div class="ipv">${K(totInv)}</div></span>
+    <span class="ip"><div class="ipd" style="background:var(--green)"></div><div class="ipl">Projected Income/yr</div><div class="ipv">${K(totInc)}</div></span>
+    <span class="ip"><div class="ipd" style="background:var(--gold)"></div><div class="ipl">Projected Value (1yr)</div><div class="ipv">${K(totInv+totInc)}</div></span>`;
+}
+
+/* Wire Mansa-X form */
+document.getElementById("mxo").onclick=()=>document.getElementById("mxf").classList.toggle("open");
+document.getElementById("mxc").onclick=()=>document.getElementById("mxf").classList.remove("open");
+document.getElementById("mxsv").onclick=()=>{
+  const fundId=document.getElementById("mx-fund-sel").value;
+  const amt=parseFloat(document.getElementById("mx-amt").value)||0;
+  const ret=parseFloat(document.getElementById("mx-ret").value)||0;
+  const note=document.getElementById("mx-note").value.trim();
+  const f=MANSAX_FUNDS.find(x=>x.id===fundId);
+  if(!fundId||!f){toast("Please select a fund");return;}
+  if(amt<f.minInv){toast(`Minimum investment is ${f.currency} ${f.minInv.toLocaleString()}`);return;}
+  if(ret<=0){toast("Please enter an expected return rate");return;}
+  ST.mx.push({fundId,name:f.label,amt,ret,note});
+  save();renderMx();metrics();
+  document.getElementById("mxf").classList.remove("open");
+  ["mx-amt","mx-ret","mx-note"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("mx-fund-sel").value="";
+  document.getElementById("mx-preview").textContent="Select fund and enter amount to see projection";
+  toast("Mansa-X investment added: "+f.label);
+};
+
+
+/* ════════ RENDER ALL ════════════════════════════════════ */
+function renderAll(){metrics();allocRender();eqTable();sectorBars();topHoldings();wlRender();divCalendar();renderSacco();renderMx();}
+
+/* ════════ INIT ══════════════════════════════════════════ */
+Chart.defaults.color="rgba(20,28,46,.45)";Chart.defaults.font.family="'DM Mono',monospace";
+load();renderAll();pxTable();
+
+/* ════════ AUTO-REFRESH every 30 min during market hours ═ */
+function scheduleRefresh(){
+  const now=new Date();const h=now.getUTCHours()+3,m=now.getUTCMinutes();
+  const isWeekday=now.getDay()>=1&&now.getDay()<=5;
+  const inSession=isWeekday&&(h>9||(h===9&&m>=0))&&h<15;
+  if(inSession){clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>{doRefresh();scheduleRefresh();},30*60*1000);}
+}
+scheduleRefresh();
+</script>
+</body>
+</html>
