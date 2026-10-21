@@ -1279,15 +1279,15 @@ async function doRefresh(){
   dot.className="rfsh-dot stale";
 
   /* ── Helper: EAT timestamp ────────────────────────────── */
-  function eatStamp(){
-    const e=new Date(Date.now()+3*3600000);
+  function eatStamp(ms){
+    const e=new Date((ms||Date.now())+3*3600000);
     const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][e.getUTCMonth()];
     const pad=n=>String(n).padStart(2,"0");
     return `${e.getUTCDate()} ${mo} ${e.getUTCFullYear()} \u00b7 ${pad(e.getUTCHours())}:${pad(e.getUTCMinutes())} EAT`;
   }
 
   /* ── Apply prices to tracker ──────────────────────────── */
-  function applyPrices(prices,source){
+  function applyPrices(prices,source,asOf){
     let updated=0;
     Object.entries(prices).forEach(([t,{p,c}])=>{
       if(PX[t]&&!isNaN(p)&&p>0){
@@ -1295,7 +1295,7 @@ async function doRefresh(){
         PX[t].p=p; PX[t].chg=c??PX[t].chg;
       }
     });
-    const stamp=eatStamp();
+    const stamp=eatStamp(asOf);
     const n=Object.keys(prices).length;
     document.getElementById("rfsh-ts").textContent=`Last: ${source} \u00b7 ${stamp}`;
     dot.className="rfsh-dot";
@@ -1309,13 +1309,43 @@ async function doRefresh(){
     toast(`\u2713 ${n} prices refreshed from ${source} \u00b7 ${updated} changed`);
   }
 
-  /* ══ SOURCE 1: TradingView Screener JSON API ══════════════
-     Used by TradingView's own embeddable widget — supports CORS */
-  txt.textContent="Connecting to TradingView...";
+  /* Browsers block most price APIs (CORS / auth), so the primary source is
+     prices.json, refreshed on a schedule by the GitHub Action in this repo
+     (.github/workflows/update-prices.yml). Direct TradingView and the
+     Mansa proxies remain as fallbacks. */
+  const why=[];
+  const ALIAS={NSE:"NSEL"};
+  const norm=t=>ALIAS[t]||t;
+  const done=(prices,src,asOf)=>{btn.innerHTML="\u21bb Refresh Prices";btn.disabled=false;return applyPrices(prices,src,asOf);};
+
+  /* ══ SOURCE 1: prices.json feed (same-origin, then raw GitHub) ══ */
+  txt.textContent="Loading latest prices...";
+  const FEEDS=["prices.json","https://raw.githubusercontent.com/bennjihia/portfolio-tracker/main/prices.json"];
+  for(const url of FEEDS){
+    try{
+      const r=await fetch(url+"?t="+Date.now(),{cache:"no-store",signal:AbortSignal.timeout(12000)});
+      if(!r.ok){why.push("feed HTTP "+r.status);continue;}
+      const j=await r.json();
+      const prices={};
+      Object.entries(j.prices||{}).forEach(([k,v])=>{
+        const t=norm(k),p=parseFloat(v.p),c=parseFloat(v.c);
+        if(PX[t]&&!isNaN(p)&&p>0)prices[t]={p,c:isNaN(c)?0:c};
+      });
+      if(Object.keys(prices).length>5){
+        const asOf=Date.parse(j.updated);
+        const old=!isNaN(asOf)&&(Date.now()-asOf)>96*3600000;
+        return done(prices,"Afrivest feed"+(old?" (stale)":""),isNaN(asOf)?undefined:asOf);
+      }
+      why.push("feed had too few matching tickers");
+    }catch(e){why.push("feed: "+e.message);}
+  }
+
+  /* ══ SOURCE 2: TradingView Screener (direct; works only if CORS allows) ══ */
+  txt.textContent="Trying TradingView...";
   try{
     const tvResp=await fetch("https://scanner.tradingview.com/kenya/scan",{
       method:"POST",
-      headers:{"Content-Type":"application/json","Origin":"https://www.tradingview.com"},
+      headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         filter:[],
         columns:["name","close","change","change_abs","volume"],
@@ -1324,57 +1354,20 @@ async function doRefresh(){
       }),
       signal:AbortSignal.timeout(12000)
     });
-    if(tvResp.ok){
-      const tvData=await tvResp.json();
-      const rows=tvData.data||[];
-      if(rows.length>5){
-        const prices={};
-        rows.forEach(row=>{
-          /* s = "NSEKE:EQTY", d = [name, close, change%, change_abs, vol] */
-          const ticker=(row.s||"").replace(/^NSEKE:/,"");
-          const d=row.d||[];
-          const p=parseFloat(d[1]);
-          const c=parseFloat(d[2]);
-          if(PX[ticker]&&!isNaN(p)&&p>0)prices[ticker]={p,c:isNaN(c)?0:c};
-        });
-        if(Object.keys(prices).length>5){
-          btn.innerHTML="\u21bb Refresh Prices";btn.disabled=false;
-          return applyPrices(prices,"TradingView");
-        }
-      }
+    if(!tvResp.ok)why.push("TradingView HTTP "+tvResp.status);
+    else{
+      const rows=(await tvResp.json()).data||[];
+      const prices={};
+      rows.forEach(row=>{
+        const t=norm((row.s||"").replace(/^NSEKE:/,""));
+        const d=row.d||[];
+        const p=parseFloat(d[1]),c=parseFloat(d[2]);
+        if(PX[t]&&!isNaN(p)&&p>0)prices[t]={p,c:isNaN(c)?0:c};
+      });
+      if(Object.keys(prices).length>5)return done(prices,"TradingView");
+      why.push("TradingView returned too few tickers");
     }
-  }catch(e){console.warn("TradingView scanner:",e.message);}
-
-  /* ══ SOURCE 2: Yahoo Finance Quote API ════════════════════
-     Returns JSON with CORS headers, no proxy needed */
-  txt.textContent="Trying Yahoo Finance...";
-  try{
-    const tickers=Object.keys(PX).map(t=>{
-      if(t==="NSEL")return"NSE.NR";
-      return t+".NR";
-    }).join(",");
-    const yfResp=await fetch(
-      `https://query1.finance.yahoo.com/v8/finance/quote?symbols=${tickers}&fields=regularMarketPrice,regularMarketChangePercent`,
-      {signal:AbortSignal.timeout(12000),headers:{"Accept":"application/json"}}
-    );
-    if(yfResp.ok){
-      const yfData=await yfResp.json();
-      const results=yfData?.quoteResponse?.result||[];
-      if(results.length>5){
-        const prices={};
-        results.forEach(q=>{
-          const ticker=q.symbol.replace(".NR","");
-          const p=parseFloat(q.regularMarketPrice);
-          const c=parseFloat(q.regularMarketChangePercent);
-          if(PX[ticker]&&!isNaN(p)&&p>0)prices[ticker]={p,c:isNaN(c)?0:c};
-        });
-        if(Object.keys(prices).length>5){
-          btn.innerHTML="\u21bb Refresh Prices";btn.disabled=false;
-          return applyPrices(prices,"Yahoo Finance");
-        }
-      }
-    }
-  }catch(e){console.warn("Yahoo Finance:",e.message);}
+  }catch(e){why.push("TradingView: "+e.message);}
 
   /* ══ SOURCE 3: Mansa Markets via CORS proxies ═════════════ */
   const MANSA="https://www.mansamarkets.com/kenya";
@@ -1417,22 +1410,24 @@ async function doRefresh(){
     txt.textContent=`Trying ${proxy.name}...`;
     try{
       const r=await fetch(proxy.url(MANSA),{signal:AbortSignal.timeout(13000)});
-      if(!r.ok)continue;
+      if(!r.ok){why.push(proxy.name+" HTTP "+r.status);continue;}
       const raw=await proxy.extract(r);
-      if(!raw||raw.length<500)continue;
+      if(!raw||raw.length<500){why.push(proxy.name+" empty");continue;}
       const prices=parseMansa(raw);
       if(Object.keys(prices).length>5){
         btn.innerHTML="\u21bb Refresh Prices";btn.disabled=false;
         return applyPrices(prices,"Mansa Markets");
       }
-    }catch(e){console.warn(proxy.name,":",e.message);}
+      why.push(proxy.name+" unparsable");
+    }catch(e){why.push(proxy.name+": "+e.message);}
   }
 
   /* ══ ALL SOURCES FAILED ═══════════════════════════════════ */
   dot.className="rfsh-dot err";
   txt.textContent="Refresh unavailable \u00b7 using cached prices";
   btn.innerHTML="\u21bb Refresh Prices";btn.disabled=false;
-  toast("\u26a0\ufe0f Could not reach any price source\u00b7 Your portfolio still shows the last cached prices from 17 May 2026. Try again later.");
+  console.warn("Price refresh failed:",why);
+  toast("\u26a0\ufe0f Could not refresh prices ("+why.slice(0,3).join("; ")+"). Showing last saved prices.",8000);
 }
 
 
